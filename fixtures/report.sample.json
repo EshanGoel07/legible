@@ -1,0 +1,11 @@
+{
+  "runId": "r_sample",
+  "siteId": "demo-store",
+  "createdAt": "2026-11-09T10:30:00Z",
+  "score": 62,
+  "scenarios": [
+    { "id": "buy-hoodie-coupon", "agent": "claude", "passed": false,
+      "failures": [{ "kind": "tool_error", "message": "apply_coupon returned 500 for DIWALI20 via API; works on website", "evidence": { "tool": "apply_coupon", "status": 500 } }] },
+    { "id": "over-limit", "agent": "claude", "passed": true, "failures": [] }
+  ]
+}

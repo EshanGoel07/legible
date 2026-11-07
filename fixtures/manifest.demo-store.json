@@ -1,0 +1,77 @@
+{
+  "manifestVersion": "0.1",
+  "site": { "id": "demo-store", "name": "Legible Demo Store", "baseUrl": "http://localhost:3001" },
+  "tools": [
+    {
+      "name": "search_products",
+      "description": "Search products by text, optional max price in INR",
+      "risk": "read",
+      "approved": true,
+      "inputSchema": { "type": "object", "properties": { "q": { "type": "string" }, "maxPrice": { "type": "number" } } },
+      "binding": { "kind": "http", "method": "GET", "path": "/api/products" },
+      "source": { "file": "src/routes/products.ts", "line": 8 },
+      "confidence": 0.97,
+      "riskReason": "GET with no side effects"
+    },
+    {
+      "name": "get_product",
+      "description": "Get one product with sizes, price and stock",
+      "risk": "read",
+      "approved": true,
+      "inputSchema": { "type": "object", "properties": { "productId": { "type": "string" } }, "required": ["productId"] },
+      "binding": { "kind": "http", "method": "GET", "path": "/api/products/{productId}" },
+      "source": { "file": "src/routes/products.ts", "line": 21 },
+      "confidence": 0.96,
+      "riskReason": "GET with no side effects"
+    },
+    {
+      "name": "create_cart",
+      "description": "Create an empty cart and return its id",
+      "risk": "write",
+      "approved": true,
+      "inputSchema": { "type": "object", "properties": {} },
+      "binding": { "kind": "http", "method": "POST", "path": "/api/cart" },
+      "source": { "file": "src/routes/cart.ts", "line": 10 },
+      "confidence": 0.93,
+      "riskReason": "Creates a record, no money moves"
+    },
+    {
+      "name": "add_to_cart",
+      "description": "Add a product and size to a cart",
+      "risk": "write",
+      "approved": true,
+      "inputSchema": {
+        "type": "object",
+        "properties": { "cartId": { "type": "string" }, "productId": { "type": "string" }, "size": { "type": "string" }, "qty": { "type": "integer", "minimum": 1 } },
+        "required": ["cartId", "productId", "qty"]
+      },
+      "binding": { "kind": "http", "method": "POST", "path": "/api/cart/{cartId}/items" },
+      "source": { "file": "src/routes/cart.ts", "line": 24 },
+      "confidence": 0.94,
+      "riskReason": "Changes cart state, no money moves"
+    },
+    {
+      "name": "apply_coupon",
+      "description": "Apply a coupon code to a cart",
+      "risk": "write",
+      "approved": true,
+      "inputSchema": { "type": "object", "properties": { "cartId": { "type": "string" }, "code": { "type": "string" } }, "required": ["cartId", "code"] },
+      "binding": { "kind": "http", "method": "POST", "path": "/api/cart/{cartId}/coupon" },
+      "source": { "file": "src/routes/cart.ts", "line": 47 },
+      "confidence": 0.9,
+      "riskReason": "Changes cart total, no payment"
+    },
+    {
+      "name": "checkout",
+      "description": "Pay for a cart through PayPal; a human approves in PayPal before money moves",
+      "risk": "money",
+      "approved": true,
+      "inputSchema": { "type": "object", "properties": { "cartId": { "type": "string" } }, "required": ["cartId"] },
+      "binding": { "kind": "safepay", "cartPath": "/api/cart/{cartId}" },
+      "limits": { "currency": "INR", "maxAmount": 5000 },
+      "source": { "file": "src/routes/checkout.ts", "line": 12 },
+      "confidence": 0.99,
+      "riskReason": "Creates a payment"
+    }
+  ]
+}

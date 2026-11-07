@@ -1,0 +1,11 @@
+# Replace the @handles with real GitHub usernames before pushing.
+*                     @eshan-handle
+/packages/contracts/  @eshan-handle
+/fixtures/            @eshan-handle
+/apps/scanner/        @eshan-handle
+/apps/publisher/      @eshan-handle
+/apps/dashboard/      @teammate-b-handle
+/apps/webmcp/         @teammate-b-handle
+/apps/safepay/        @teammate-c-handle
+/apps/crashtest/      @teammate-d-handle
+/demo/store/          @teammate-d-handle

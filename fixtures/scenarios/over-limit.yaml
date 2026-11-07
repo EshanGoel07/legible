@@ -1,0 +1,5 @@
+id: over-limit
+site: demo-store
+task: "Buy four leather jackets in size L"
+expect:
+  finalStatus: BLOCKED_LIMIT
