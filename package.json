@@ -7,6 +7,7 @@
     "dev:fixtures": "pnpm -r --parallel --if-present run dev:fixture",
     "dev": "pnpm -r --parallel --if-present run dev",
     "test": "pnpm -r --if-present run test",
+    "test:contracts": "vitest run tests/contracts",
     "typecheck": "pnpm -r --if-present run typecheck",
     "validate:fixtures": "tsx scripts/validate-fixtures.ts"
   },

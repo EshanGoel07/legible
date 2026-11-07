@@ -5,7 +5,7 @@
  */
 import { z } from "zod";
 
-export const CONTRACTS_VERSION = "0.1.0";
+export const CONTRACTS_VERSION = "0.2.0";
 
 /** Header the agent/harness sends on every MCP request so calls can be matched to a run. */
 export const RUN_HEADER = "x-legible-run";
@@ -173,6 +173,64 @@ export const Report = z.object({
   ),
 });
 export type Report = z.infer<typeof Report>;
+
+// ───────────────────────── Contract 6 — Store API (Demo store serves; Publisher and Safe Pay call it)
+/**
+ * Order lifecycle (who calls what):
+ *  1. Publisher's `checkout` tool: GET store cart  → StoreCart (amount = total)
+ *  2. Publisher → Safe Pay POST /safepay/checkouts
+ *  3. Safe Pay → store POST /api/orders            → StoreOrder status "pending"
+ *  4. Buyer approves in PayPal → PayPal redirects to Safe Pay GET /safepay/return → Safe Pay captures
+ *  5. Safe Pay → store POST /api/orders/:checkoutId/status { paid | failed }
+ *  6. Crash Test → Safe Pay GET /verify/:checkoutId (Safe Pay reads GET /api/orders/:checkoutId)
+ */
+
+/** GET /api/cart/:cartId */
+export const StoreCart = z.object({
+  cartId: z.string(),
+  items: z.array(z.object({ productId: z.string(), size: z.string().nullable(), qty: z.number().int().positive(), unitPrice: Money })),
+  subtotal: Money,
+  shipping: Money,
+  discount: Money,
+  total: Money,
+  currency: Currency,
+  coupon: z.string().nullable(),
+});
+export type StoreCart = z.infer<typeof StoreCart>;
+
+export const StoreOrderStatus = z.enum(["pending", "paid", "failed"]);
+
+/** POST /api/orders — Safe Pay creates the store's order when a checkout is created */
+export const CreateStoreOrderRequest = z.object({ cartId: z.string(), checkoutId: z.string(), amount: Money, currency: Currency });
+export type CreateStoreOrderRequest = z.infer<typeof CreateStoreOrderRequest>;
+
+/** POST /api/orders/:checkoutId/status — Safe Pay updates it after capture or decline */
+export const UpdateStoreOrderStatusRequest = z.object({ status: z.enum(["paid", "failed"]) });
+
+/** Response of the three order routes, and of GET /api/orders/:checkoutId */
+export const StoreOrder = z.object({ checkoutId: z.string(), cartId: z.string(), status: StoreOrderStatus, amount: Money, currency: Currency });
+export type StoreOrder = z.infer<typeof StoreOrder>;
+
+// ───────────────────────── Every route in one place (use these, never retype paths)
+export const ROUTES = {
+  health: "/health",
+  store: {
+    cart: "/api/cart/:cartId",
+    orders: "/api/orders",
+    order: "/api/orders/:checkoutId",
+    orderStatus: "/api/orders/:checkoutId/status",
+  },
+  safepay: {
+    checkouts: "/safepay/checkouts",
+    checkout: "/safepay/checkouts/:id",
+    capture: "/safepay/checkouts/:id/capture",
+    /** PayPal return_url: captures, then updates the store order */
+    return: "/safepay/return",
+    /** TEST ONLY (SAFEPAY_TEST_MODE=1): Playwright approves as the sandbox buyer, waits for capture, returns Checkout */
+    testApprove: "/safepay/test/approve/:checkoutId",
+    verify: "/verify/:checkoutId",
+  },
+} as const;
 
 // ───────────────────────── Every service: GET /health
 
