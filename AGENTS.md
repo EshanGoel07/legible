@@ -21,6 +21,24 @@ routes agent payments through PayPal Sandbox, and proves it works with a Crash T
 - Write tests (Vitest) for anything that crosses a contract.
 - When finished, append 2 lines to `docs/progress.md`: what changed, what's next.
 
+## Setup (once per machine)
+```bash
+npm install -g pnpm@9.12.0 --allow-scripts=pnpm
+pnpm install && pnpm validate:fixtures   # 4 x "ok"
+cp .env.example .env                      # keys from Eshan by DM; never commit .env
+```
+
+## Package conventions (every app/ and demo/ folder) — required for the join
+- `package.json` name `@legible/<folder>` (e.g. `@legible/safepay`), `"type": "module"`
+- dependency `"@legible/contracts": "workspace:*"`; `tsconfig.json` extends `../../tsconfig.base.json`
+- scripts: `dev` (real service), `dev:fixture` (mock/stub, if you serve one), `test` (vitest), `typecheck` (tsc)
+- every URL comes from env (`STORE_URL`, `SAFEPAY_URL`, `PUBLISHER_URL`); every path from `ROUTES` in contracts
+- services listen on their port from AGENTS.md and expose `GET /health` → `Health` with `contractsVersion: CONTRACTS_VERSION`
+
+## Contract tests
+Each Monday join adds `tests/contracts/<caller>-<callee>.test.ts` (run with `pnpm test:contracts`):
+it calls the real service and `parse`s every response with the contract schema. The pair owning the join writes it.
+
 ## OWNERSHIP
 | Folder | Owner |
 | --- | --- |

@@ -9,7 +9,7 @@ the Crash Test report. It's what judges look at in the demo video, so it should 
 ## Contracts (read-only for you — import from `@legible/contracts`)
 - **Contract 1** `Manifest` — read it, let the user toggle `approved` and edit `description`, write it back (must still pass `Manifest.parse`)
 - **Contract 5** `Report` — render score + per-scenario failures
-- `Health` — your `GET /api/health` returns `{ service: "dashboard", ... }`
+- `Health` — your `GET /health` (Next route handler `app/health/route.ts`) returns `{ service: "dashboard", ... }`
 
 ## Stack
 Next.js (App Router) + TypeScript + Tailwind · `zod` via `@legible/contracts` · `vitest` · port 3004
@@ -19,7 +19,7 @@ Next.js (App Router) + TypeScript + Tailwind · `zod` via `@legible/contracts` �
 - Report: `fixtures/report.sample.json` (later: newest `runs/<runId>/report.json` from `RUNS_DIR`)
 
 ## Phase 0 — tonight
-- [ ] Next.js app boots on 3004, `/api/health` returns `Health`, reads + parses the fixture manifest
+- [ ] Next.js app boots on 3004 (`@legible/dashboard`, scripts per AGENTS.md), `/health` returns `Health`, reads + parses the fixture manifest
 
 ## Phase 1 — Sat night to Sun
 - [ ] **Tools page:** tools grouped by risk — 🟢 read / 🟡 write / 🔴 money. Each card: name, description, input fields, source file:line, scanner `confidence` and `riskReason`. Low confidence (< 0.8) gets a "review" badge.
@@ -33,6 +33,10 @@ Next.js (App Router) + TypeScript + Tailwind · `zod` via `@legible/contracts` �
 - With Eshan: load a freshly scanned manifest; approved/rejected tools change what the MCP server serves after restart
 - With D: show a real `report.json` from a Crash Test run
 
+## Tue 10 — polish + feature freeze 22:00
+- [ ] Dashboard is the face of the demo: clean layout, readable on a laptop recording, loading/empty/error states
+- [ ] Contract test `tests/contracts/dashboard-report.test.ts`: real `report.json` parses and renders
+
 ## Wed — stretch: WebMCP output (`apps/webmcp`)
 A small script: manifest in → a JS file that calls `navigator.modelContext.registerTool(...)` for each approved tool
 (with a polyfill so it works today). Reads only `Manifest` — no other module depends on it, so it can be dropped safely.
@@ -40,6 +44,8 @@ A small script: manifest in → a JS file that calls `navigator.modelContext.reg
 ## Thu — submission draft (you lead this)
 - Devpost write-up draft: problem, how it works, PayPal APIs used, what's next (Eshan edits)
 - Demo video: screen recording of dashboard + report; Eshan narrates the full flow
+
+## Fri 13 — buffer only; Eshan submits before 12:00 IST
 
 ## Rules
 Branch `b/<feature>`. Small PRs. Don't let the agent commit — you commit. `git pull --rebase origin main` before every PR.

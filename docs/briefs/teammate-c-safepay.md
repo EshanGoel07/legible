@@ -10,7 +10,8 @@ capture only after human approval, and prove PayPal's record matches the store's
 
 ## Contracts
 - Serves (to Eshan's Publisher): **Contract 3** `POST /safepay/checkouts`, `GET /safepay/checkouts/:id`, `POST /safepay/checkouts/:id/capture`; **Contract 4** `GET /verify/:checkoutId` → `VerifyResult`
-- Calls: PayPal Orders v2 (Sandbox), the store's order route (`STORE_URL`)
+- Calls: PayPal Orders v2 (Sandbox); the store's **Contract 6** routes — `POST /api/orders`, `POST /api/orders/:checkoutId/status`, `GET /api/orders/:checkoutId` (paths from `ROUTES.store`)
+- Order lifecycle you drive: read the comment block above `StoreCart` in contracts
 
 ## Stack
 Node 20 + TypeScript · `express` · PayPal REST via `fetch` (OAuth client-credentials → Orders v2) · `better-sqlite3` · `playwright` (sandbox approval helper only) · `zod` · `vitest`
@@ -22,10 +23,10 @@ Node 20 + TypeScript · `express` · PayPal REST via `fetch` (OAuth client-crede
 
 ## Phase 1 — Sat night to Sun
 - [ ] `CreateCheckoutRequest.parse` input; if `Number(amount) > maxAmount` → return `BLOCKED_LIMIT`, create no PayPal order
-- [ ] Create PayPal order, store checkout row in SQLite, return `Checkout` with `approvalUrl` (the `payer-action`/approve link)
-- [ ] Status sync: poll `GET /v2/checkout/orders/:id` (webhooks are a stretch) → `APPROVED`; capture → `CAPTURED` or `DECLINED`
+- [ ] Create PayPal order with `return_url = ${SAFEPAY_URL}/safepay/return?checkoutId=…`, store checkout row in SQLite, `POST /api/orders` to the store (status pending), return `Checkout` with `approvalUrl` (the `payer-action`/approve link)
+- [ ] `GET /safepay/return`: PayPal sends the buyer here after approval → capture → `CAPTURED`/`DECLINED` → `POST /api/orders/:checkoutId/status` (paid/failed). Webhooks are a stretch.
 - [ ] Verify API: fetch PayPal order + store's order row, compare status/amount/currency → `VerifyResult` with `mismatches`
-- [ ] `approveAsSandboxBuyer(approvalUrl)` with Playwright, using `PAYPAL_SANDBOX_BUYER_*` — test harness only
+- [ ] `POST /safepay/test/approve/:checkoutId` (only when `SAFEPAY_TEST_MODE=1`): Playwright approves as `PAYPAL_SANDBOX_BUYER_*`, waits for capture, returns `Checkout`. D calls this over HTTP — never import across folders.
 - [ ] Decline path: use PayPal's sandbox negative testing so the declined-payment scenario works
 - [ ] `GET /health` returns `Health`. Never log the client secret or tokens.
 - Done when: one script runs create → auto-approve → capture → verify and prints `match: true`.
@@ -34,8 +35,17 @@ Node 20 + TypeScript · `express` · PayPal REST via `fetch` (OAuth client-crede
 - With Eshan: Publisher's checkout tool returns a real `approvalUrl`; over-limit returns `BLOCKED_LIMIT`
 - With D: Verify reports `match: true` on happy path and `state_mismatch` on the planted "paid before capture" bug
 
+## Tue 10 — MVP + feature freeze 22:00
+- [ ] Happy path and declined path both green inside `pnpm demo`
+- [ ] Contract tests: `tests/contracts/publisher-safepay.test.ts` (with Eshan), `tests/contracts/crashtest-verify.test.ts` (with D)
+
 ## Stretch (Wed)
 Prompt-injection defence: a product description tells the agent to buy 10 units — show limits + human approval stop it.
+
+## Thu 12 — ship
+- [ ] Deploy Safe Pay with Eshan (Sandbox keys as host env vars, `SAFEPAY_TEST_MODE` off); confirm one real order end to end on the deployed URL
+
+## Fri 13 — buffer only
 
 ## Rules
 Branch `c/<feature>`. Sandbox only (`api-m.sandbox.paypal.com`). Don't commit from the agent — you commit.

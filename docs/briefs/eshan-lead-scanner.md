@@ -23,7 +23,7 @@ Node 20 + TypeScript · `@anthropic-ai/sdk` (structured output via tool use) · 
 ## Phase 0 — tonight
 - [ ] Push this scaffold, protect `main` (PR required, 1 review), add teammates, fill CODEOWNERS handles
 - [ ] Share PayPal Sandbox app creds privately; confirm everyone's `pnpm validate:fixtures` passes
-- [ ] Freeze contracts v0.1.0
+- [ ] Freeze contracts v0.2.0
 
 ## Phase 1 — Sat night to Sun
 Build the scanner as a 3-stage pipeline — this structure is what makes it impressive, not one big prompt:
@@ -41,11 +41,35 @@ Build the scanner as a 3-stage pipeline — this structure is what makes it impr
 Phase 0 (tonight, 30 min — D's harness needs it): `apps/publisher/fixture` serving the 6 fixture tools with canned responses.
 - [ ] Load `MANIFEST_PATH`, `Manifest.parse`, register only `approved: true` tools
 - [ ] `http` binding: fill `{params}` from input, call `STORE_URL`, return JSON
-- [ ] `safepay` binding: GET `cartPath` for total + currency → POST `${SAFEPAY_URL}/safepay/checkouts` with `maxAmount` from `limits` → return `approvalUrl` + status
+- [ ] `safepay` binding: GET `cartPath` → `StoreCart.parse` → amount = `total`, currency → POST `${SAFEPAY_URL}/safepay/checkouts` with `maxAmount` from `limits` → return `approvalUrl` + status
 - [ ] Append every call as one `ToolCallLog` line to `runs/<runId>/calls.jsonl`; `GET /health`
 - Done when: MCP Inspector / Claude Desktop calls all 6 fixture tools, and checkout reaches C's mock.
 
 Time saver: Publisher is mostly glue — let Claude Code write it from this brief while you review; spend your own thinking on Scanner prompts and the eval.
+
+## Contracts v0.2.0 (added Sun 8 Nov — tell the team)
+Contract 6 Store API (`StoreCart`, `StoreOrder`, order lifecycle) and `ROUTES` were added so the Store ↔ Publisher ↔
+Safe Pay ↔ Crash Test hand-offs are defined. Contracts are frozen from here.
+
+## Mon 9 — integration day (you run it)
+- [ ] Join 1 (solo): Scanner → Publisher — Publisher boots from a freshly scanned manifest
+- [ ] Join 2 (with C): Publisher → Safe Pay — checkout returns a real `approvalUrl`; over-limit → `BLOCKED_LIMIT`
+- [ ] Join 3 (with D): Crash Test → Publisher — calls appear in `calls.jsonl` with the right `runId`
+- [ ] Each join adds its `tests/contracts/*.test.ts`; merge only when `pnpm test:contracts` passes
+
+## Tue 10 — MVP + feature freeze 22:00
+- [ ] `scripts/demo.ts` + root script `pnpm demo`: start store, Safe Pay, Publisher, Dashboard → scan → run all scenarios → open report
+- [ ] Happy path passes; all 3 planted bugs caught with the right `FailureKind`
+- [ ] If not green by 22:00: cut scope (static report page, 2 scenarios). Never cut PayPal.
+
+## Wed 11 — stretch
+- [ ] Scanner eval on D's 2nd demo site → final resume numbers
+- [ ] Rehearse the 3-minute demo twice; merge stretch branches only if they don't touch the golden path
+
+## Thu 12 — ship
+- [ ] Deploy with C (Railway/Render, Sandbox only, `SAFEPAY_TEST_MODE` off), narrate the demo video, final edit of B's Devpost draft
+
+## Fri 13 — submit before 12:00 IST
 
 ## As lead (daily)
 - 10:00 and 22:00 syncs, 10 min. Merge PRs after Codex review. Run Phase 2 joins in the order in the plan.

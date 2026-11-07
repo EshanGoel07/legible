@@ -16,7 +16,7 @@ Store: Node 20 + TypeScript + `express` + `better-sqlite3`, simple HTML pages + 
 Harness: `@modelcontextprotocol/sdk` client + `@anthropic-ai/sdk` (and `openai` for a 2nd agent) tool-use loop · `yaml` · `zod` · `vitest`
 
 ## Phase 0 — tonight (Eshan needs this to scan)
-- [ ] `demo/store` routes exactly as the fixture manifest: `GET /api/products`, `GET /api/products/:productId`, `POST /api/cart`, `POST /api/cart/:cartId/items`, `POST /api/cart/:cartId/coupon`, `GET /api/cart/:cartId`, plus `POST /api/checkout` and an order route Safe Pay reads
+- [ ] `demo/store` routes exactly as the fixture manifest: `GET /api/products`, `GET /api/products/:productId`, `POST /api/cart`, `POST /api/cart/:cartId/items`, `POST /api/cart/:cartId/coupon`, `GET /api/cart/:cartId` (returns `StoreCart`), and the **Contract 6** order routes Safe Pay calls: `POST /api/orders`, `GET /api/orders/:checkoutId`, `POST /api/orders/:checkoutId/status` (all return `StoreOrder`). Plus the human web pages with a PayPal button.
 - [ ] Seed 8 products in SQLite (hoodies with sizes, a leather jacket over ₹5000), prices in INR
 - [ ] `GET /health` returns `Health`
 
@@ -24,15 +24,30 @@ Harness: `@modelcontextprotocol/sdk` client + `@anthropic-ai/sdk` (and `openai` 
 - [ ] Plant 3 bugs, each behind an env flag so we can show before/after:
   1. `DIWALI20` works from the web page but `POST /api/cart/:id/coupon` returns 500
   2. cart total from the API ignores shipping, the web page includes it
-  3. store marks the order `paid` when approval starts, before capture
+  3. `POST /api/orders` stores status `paid` immediately instead of `pending` (Verify then reports `state_mismatch`)
 - [ ] Harness CLI: `pnpm --filter crashtest run <scenario.yaml> --agent claude`
   - generate `runId`, connect MCP client to `PUBLISHER_URL` with header `x-legible-run`
   - give the LLM the scenario `task` + MCP tools; loop until it stops or 25 steps
-  - when `checkout` returns an `approvalUrl`, call C's approval helper (test only)
+  - when `checkout` returns a `checkoutId` with `PENDING_APPROVAL`, call `POST ${SAFEPAY_URL}/safepay/test/approve/:checkoutId` (HTTP, never import C's code)
   - grade: read `runs/<runId>/calls.jsonl`, call Verify, compare to `expect` → failures by `FailureKind`
   - write `report.json` (`Report.parse` before writing); score = % scenarios passed, weighted 2x for money scenarios
 - [ ] 4 scenarios: happy path (`buy-hoodie-coupon`), coupon, `over-limit`, declined payment
 - Done when: the harness writes a valid report against the fixture MCP server (`apps/publisher/fixture`) and C's mock.
+
+## Mon 9 — joins
+- [ ] With Eshan: harness → real Publisher; write `tests/contracts/crashtest-publisher.test.ts`
+- [ ] With C: harness → real Verify; happy path `match: true`, bug 3 → `state_mismatch`; write `tests/contracts/crashtest-verify.test.ts`
+- [ ] With B: real `report.json` shows in the dashboard
+
+## Tue 10 — MVP + feature freeze 22:00
+- [ ] All 4 scenarios run inside `pnpm demo`; each planted bug caught with the right `FailureKind`
+- [ ] Clean-clone check on a second laptop: clone → `pnpm install` → `pnpm demo` in under 5 min
+- [ ] Write the README quick-start from the commands that actually worked
+
+## Thu 12 — ship
+- [ ] Record clean Crash Test runs (before/after each bug flag) for the video; hand to B
+
+## Fri 13 — buffer only
 
 ## Code review duty (every day)
 Review each Claude Code PR for: contract violations, edits outside the owner's folder, secrets, missing `parse` on payloads, untested money paths. Comment, don't fix their code.
