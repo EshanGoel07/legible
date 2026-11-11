@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Legible Demo Store</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header><a href="/">Legible Demo Store</a><a href="/cart" id="cartLink">Cart</a></header>
+  <main>
+    <div class="row"><input id="q" placeholder="Search products" style="flex:1"><button id="go">Search</button></div>
+    <div id="msg" class="msg"></div>
+    <div class="grid" id="grid"></div>
+  </main>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const esc = (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+    async function api(path, opts = {}) {
+      const r = await fetch(path, { headers: { "content-type": "application/json" }, ...opts });
+      const body = await r.json();
+      if (!r.ok) throw new Error(body.message || body.error || `HTTP ${r.status}`);
+      return body;
+    }
+    async function cartId() {
+      let id = localStorage.getItem("cartId");
+      if (id) { try { await api(`/api/cart/${id}`); return id; } catch { /* stale */ } }
+      id = (await api("/api/cart", { method: "POST" })).cartId;
+      localStorage.setItem("cartId", id);
+      return id;
+    }
+    async function load() {
+      const q = $("q").value.trim();
+      const { products } = await api(`/api/products${q ? `?q=${encodeURIComponent(q)}` : ""}`);
+      $("grid").innerHTML = products.map((p) => `
+        <div class="card">
+          <h3>${esc(p.name)}</h3>
+          <div class="muted">${esc(p.description)}</div>
+          <div class="price">$${esc(p.price)}</div>
+          ${p.sizes.length ? `<select id="size-${esc(p.productId)}">${p.sizes.map((s) => `<option>${esc(s)}</option>`).join("")}</select>` : ""}
+          <button data-id="${esc(p.productId)}">Add to cart</button>
+        </div>`).join("");
+    }
+    $("grid").addEventListener("click", async (e) => {
+      const id = e.target.dataset && e.target.dataset.id;
+      if (!id) return;
+      const sel = $(`size-${id}`);
+      try {
+        await api(`/api/cart/${await cartId()}/items`, { method: "POST", body: JSON.stringify({ productId: id, size: sel ? sel.value : undefined, qty: 1 }) });
+        $("msg").className = "msg ok"; $("msg").textContent = "Added to cart.";
+      } catch (err) { $("msg").className = "msg bad"; $("msg").textContent = err.message; }
+    });
+    $("go").onclick = load;
+    $("q").onkeydown = (e) => { if (e.key === "Enter") load(); };
+    load();
+  </script>
+</body>
+</html>

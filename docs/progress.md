@@ -10,3 +10,5 @@ Append 2 lines per finished task: `YYYY-MM-DD <owner> — what changed. Next: �
   Next: joins with Eshan (Publisher → checkouts) and D (real store + verify); contract tests publisher-safepay / crashtest-verify; fixtures to USD (Eshan).
 - 2026-11-12 Eshan — M0: fixtures switched to USD (hoodie $29, jacket $79, ship $5, money limit USD 100, paidAmountMax 30); added hoodie-no-coupon + declined-payment scenarios; .nvmrc 22, engines <23; .env.example uses LLM_BASE_URL/LLM_API_KEY/LLM_MODEL (OpenAI-compatible).
   Next: M1 demo/store (Express + SQLite, USD seed, BUG_COUPON_API / BUG_PAID_EARLY flags).
+- 2026-11-12 Eshan — M1: demo/store on :3001 (Express + SQLite, 8 USD products, cart/coupon/orders/checkout routes, HTML pages, BUG_COUPON_API + BUG_PAID_EARLY default ON); fixture manifest source lines point at real handlers; 8 Vitest tests.
+  Next: M2 run Safe Pay e2e against the real store (Sandbox), add visible-browser approval fallback only if Playwright is flaky.
