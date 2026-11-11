@@ -14,6 +14,7 @@ import { scan } from "./pipeline.js";
 
 loadDotEnv();
 const { values, positionals } = parseArgs({
+  args: process.argv.slice(2).filter((a) => a !== "--"), // pnpm forwards a literal "--"
   allowPositionals: true,
   options: {
     out: { type: "string" },

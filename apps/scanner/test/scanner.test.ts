@@ -135,6 +135,7 @@ describe("eval scoring", () => {
       llm: desc({ expose: t.expose, risk: t.risk as "read" }), final: { expose: t.expose, name: t.name ?? "x", risk: t.risk as "read", confidence: 0.9 } }));
     const m = score(truth as any, details, routes);
     expect(m.tool).toMatchObject({ precision: 1, recall: 1, f1: 1 });
+    expect(m.llmTool).toMatchObject({ precision: 1, recall: 1, f1: 1 });
     expect(m.risk.pipeline).toBe(1);
     expect(m.nameExact).toBe(1);
     expect(m.discoveryRecall).toBe(1);

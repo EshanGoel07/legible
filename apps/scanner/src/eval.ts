@@ -30,13 +30,17 @@ export function score(truth: z.infer<typeof Truth>, details: RouteDetail[], disc
   const key = (m: string, p: string) => `${m} ${p}`;
   const byKey = new Map(details.map((d) => [key(d.method, d.path), d]));
   const discByKey = new Map(discovered.map((d) => [key(d.method, d.path), d]));
-  let tp = 0, fp = 0, fn = 0, tn = 0, riskOk = 0, riskN = 0, riskTpOk = 0, ruleOk = 0, llmOk = 0, nameOk = 0, found = 0;
+  let tp = 0, fp = 0, fn = 0, tn = 0, ltp = 0, lfp = 0, lfn = 0, riskOk = 0, riskN = 0, riskTpOk = 0, ruleOk = 0, llmOk = 0, nameOk = 0, found = 0;
   const confRight: number[] = [], confWrong: number[] = [];
   const rows = truth.routes.map((t) => {
     const d = byKey.get(key(t.method, t.path));
     const disc = discByKey.get(key(t.method, t.path));
     if (disc) found++;
     const predExpose = d?.final?.expose ?? false;
+    const llmExpose = d?.llm?.expose ?? false;
+    if (t.expose && llmExpose) ltp++;
+    else if (!t.expose && llmExpose) lfp++;
+    else if (t.expose && !llmExpose) lfn++;
     if (t.expose && predExpose) tp++;
     else if (!t.expose && predExpose) fp++;
     else if (t.expose && !predExpose) fn++;
@@ -54,17 +58,21 @@ export function score(truth: z.infer<typeof Truth>, details: RouteDetail[], disc
       if (t.expose && predExpose && ok) riskTpOk++;
     }
     if (t.expose && predExpose && d?.final?.name === t.name) nameOk++;
-    return { route: key(t.method, t.path), truth: t, pred: d?.final ?? null, rule, llmRisk: d?.llm?.risk ?? null, agreed: d?.classified?.agreed ?? null, error: d?.error ?? null };
+    return { route: key(t.method, t.path), truth: t, pred: d?.final ?? null, llmExpose: d?.llm?.expose ?? null, rule, llmRisk: d?.llm?.risk ?? null, agreed: d?.classified?.agreed ?? null, error: d?.error ?? null };
   });
   const n = truth.routes.length;
   const precision = tp + fp ? tp / (tp + fp) : 0;
   const recall = tp + fn ? tp / (tp + fn) : 0;
   const f1 = precision + recall ? (2 * precision * recall) / (precision + recall) : 0;
+  const lp = ltp + lfp ? ltp / (ltp + lfp) : 0;
+  const lr = ltp + lfn ? ltp / (ltp + lfn) : 0;
+  const llmTool = { tp: ltp, fp: lfp, fn: lfn, precision: lp, recall: lr, f1: lp + lr ? (2 * lp * lr) / (lp + lr) : 0 };
   const mean = (a: number[]) => (a.length ? a.reduce((s, x) => s + x, 0) / a.length : null);
   return {
     n,
     discoveryRecall: found / n,
     tool: { tp, fp, fn, tn, precision, recall, f1 },
+    llmTool,
     risk: { pipeline: riskN ? riskOk / riskN : 0, pipelineOnTruePositives: tp ? riskTpOk / tp : 0, rulesOnly: ruleOk / n, llmOnly: llmOk / n },
     nameExact: tp ? nameOk / tp : 0,
     meanConfidence: { correct: mean(confRight), wrong: mean(confWrong) },
@@ -75,6 +83,7 @@ export function score(truth: z.infer<typeof Truth>, details: RouteDetail[], disc
 async function main() {
   loadDotEnv();
   const { values } = parseArgs({
+  args: process.argv.slice(2).filter((a) => a !== "--"), // pnpm forwards a literal "--"
     options: {
       truth: { type: "string", default: fileURLToPath(new URL("../eval/ground-truth.demo-store.json", import.meta.url)) },
       "no-cache": { type: "boolean", default: false },
@@ -102,21 +111,22 @@ async function main() {
   const out: string[] = [];
   out.push(`\nScanner eval · site ${truth.site} · ${m.n} labelled routes · model ${llm.model}`);
   out.push(`LLM calls ${llm.stats.calls} (forced-tool ok ${llm.stats.forcedToolOk}, JSON fallbacks ${llm.stats.jsonFallbacks}, retries ${llm.stats.retries}) · cache hits ${cache.hits} · ${(result.ms / 1000).toFixed(1)}s\n`);
-  out.push(`| route | truth | predicted | rules | LLM | conf | ok |`);
-  out.push(`|---|---|---|---|---|---|---|`);
+  out.push(`| route | truth | pipeline | rules risk | LLM risk | LLM expose | conf | ok |`);
+  out.push(`|---|---|---|---|---|---|---|---|`);
   for (const r of m.rows) {
     const t = `${r.truth.expose ? r.truth.name : "–"} ${r.truth.risk}`;
     const p = r.pred ? `${r.pred.expose ? r.pred.name : "–"} ${r.pred.risk}` : `ERROR`;
     const ok = r.pred && r.pred.expose === r.truth.expose && r.pred.risk === r.truth.risk ? "✓" : "✗";
-    out.push(`| ${r.route} | ${t} | ${p} | ${r.rule ?? "–"} | ${r.llmRisk ?? "–"} | ${r.pred?.confidence ?? "–"} | ${ok} |`);
+    out.push(`| ${r.route} | ${t} | ${p} | ${r.rule ?? "–"} | ${r.llmRisk ?? "–"} | ${r.llmExpose === null ? "–" : r.llmExpose ? "yes" : "no"} | ${r.pred?.confidence ?? "–"} | ${ok} |`);
   }
   out.push("");
   out.push(`| metric | value |`);
   out.push(`|---|---|`);
   out.push(`| discovery recall (stage 1, deterministic) | ${pct(m.discoveryRecall)} |`);
-  out.push(`| tool precision | ${pct(m.tool.precision)} (TP ${m.tool.tp}, FP ${m.tool.fp}) |`);
-  out.push(`| tool recall | ${pct(m.tool.recall)} (FN ${m.tool.fn}) |`);
-  out.push(`| tool F1 | ${pct(m.tool.f1)} |`);
+  out.push(`| tool precision, pipeline | ${pct(m.tool.precision)} (TP ${m.tool.tp}, FP ${m.tool.fp}) |`);
+  out.push(`| tool recall, pipeline | ${pct(m.tool.recall)} (FN ${m.tool.fn}) |`);
+  out.push(`| tool F1, pipeline | ${pct(m.tool.f1)} |`);
+  out.push(`| tool P / R / F1, LLM expose alone (no stage-3 guard) | ${pct(m.llmTool.precision)} / ${pct(m.llmTool.recall)} / ${pct(m.llmTool.f1)} (FP ${m.llmTool.fp}) |`);
   out.push(`| risk-tier accuracy, pipeline (all routes) | ${pct(m.risk.pipeline)} |`);
   out.push(`| risk-tier accuracy, pipeline (exposed tools) | ${pct(m.risk.pipelineOnTruePositives)} |`);
   out.push(`| risk-tier accuracy, rules only | ${pct(m.risk.rulesOnly)} |`);

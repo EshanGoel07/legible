@@ -65,7 +65,8 @@ export class Llm {
         const retryable = e instanceof OpenAI.APIConnectionError || status === 429 || (status !== undefined && status >= 500);
         if (!retryable || attempt >= max) throw e;
         const retryAfter = Number(e?.headers?.get?.("retry-after"));
-        const wait = Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : base * 2 ** attempt + Math.random() * 500;
+        // Never shorter than the exponential step: a tiny retry-after (Groq TPM says "1.9s") would burn all retries inside one minute.
+        const wait = Math.max(Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : 0, base * 2 ** attempt) + Math.random() * 500;
         this.stats.retries++;
         this.opts.log?.(`LLM ${status ?? (e instanceof OpenAI.APIConnectionTimeoutError ? "timeout" : "network error")}; retry ${attempt + 1}/${max} in ${(wait / 1000).toFixed(1)}s`);
         await new Promise((r) => setTimeout(r, wait));
