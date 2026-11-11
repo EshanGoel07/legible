@@ -24,3 +24,12 @@ export const FAILURE: Record<string, { label: string; cls: string }> = {
 };
 
 export const scoreColor = (s: number) => (s >= 80 ? { text: "text-emerald-600", stroke: "#059669", soft: "bg-emerald-50" } : s >= 50 ? { text: "text-amber-600", stroke: "#d97706", soft: "bg-amber-50" } : { text: "text-rose-600", stroke: "#e11d48", soft: "bg-rose-50" });
+
+/** True when `reason` mostly repeats `description` (the scanner sometimes restates it); then the card shows it once. */
+export function repeats(reason: string, description: string): boolean {
+  const words = (t: string) => t.toLowerCase().match(/[a-z0-9]+/g) ?? [];
+  const r = words(reason).filter((w) => w.length > 2);
+  if (!r.length) return true;
+  const d = new Set(words(description));
+  return r.filter((w) => d.has(w)).length / r.length >= 0.75;
+}

@@ -58,7 +58,7 @@ one payment blocked by the limit. A hundred out of a hundred. That score is what
 
 ### 2:35–2:45 · Close
 **Screen:** README architecture diagram.
-**Say:** "Legible: scan, approve, publish, pay safely with PayPal, and crash-test it. Any site, any agent."
+**Say:** "Legible: scan, approve, publish, pay safely with PayPal, and crash-test it. Make any web app agent-ready, starting with Express and TypeScript."
 
 ---
 

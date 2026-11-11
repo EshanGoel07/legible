@@ -3,7 +3,7 @@ import "./globals.css";
 import { Nav } from "@/components/Nav";
 import { getConfig, loadManifestView, publisherStatus } from "@/lib/data";
 
-export const metadata: Metadata = { title: "Legible", description: "Make any website safely usable by AI agents, and prove it." };
+export const metadata: Metadata = { title: "Legible", description: "Make any web app agent-ready — starting with Express/TypeScript." };
 export const dynamic = "force-dynamic";
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

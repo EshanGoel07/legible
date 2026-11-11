@@ -1,6 +1,6 @@
 # Legible
 
-**Make any website safely usable by AI agents, and prove it.**
+**Make any web app agent-ready — starting with Express/TypeScript.**
 
 AI agents are starting to shop, book and pay on the web, but websites were built for humans. An agent clicking
 through HTML is fragile, and an agent with a payment API is dangerous. Legible reads a site's code, decides which
@@ -10,7 +10,7 @@ actions an agent may take and how risky each one is, publishes them as an MCP se
 Built for the PayPal AI Hackathon 2026. MIT licensed.
 
 ## How it works
-1. **Scan**: reads the site's source and writes an agent manifest: tools with risk tiers `read` / `write` / `money`.
+1. **Scan**: reads the site's source (Express + TypeScript today) and writes an agent manifest: tools with risk tiers `read` / `write` / `money`.
 2. **Approve**: a human approves which tools agents get in the **dashboard** (tools start unapproved).
 3. **Publish**: approved tools are served as an MCP server (Streamable HTTP). Every call is logged per run.
 4. **Safe Pay**: money tools never touch card data. They create a **PayPal Sandbox order**; a human approves it in
@@ -132,6 +132,10 @@ flagged with confidence 0.57. The benchmark is small (one site, 11 routes).
 
 Money scenarios count double in the score. Verify runs before approval and again after PayPal, because the
 paid-early bug is invisible once the capture completes.
+
+## What's next
+- More frameworks (Next.js, FastAPI, Rails). The scanner reads Express/TypeScript today, and its eval covers one site (11 routes).
+- A second demo site to widen the scanner benchmark.
 
 ## Team
 Rules for every coding agent: `AGENTS.md`. Briefs: `docs/briefs/`. Progress log: `docs/progress.md`. Video script: `docs/demo-script.md`.

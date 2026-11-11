@@ -137,3 +137,12 @@ describe("route handlers", () => {
     expect((await bad.json()).error).toMatch(/site|tools/);
   });
 });
+
+describe("card copy", () => {
+  it("repeats(): hides a risk reason that restates the description, keeps one that adds information", async () => {
+    const { repeats } = await import("../lib/format");
+    expect(repeats("Starts a PayPal payment for the cart total.", "Start a PayPal payment for the cart total and returns the PayPal approval URL.")).toBe(true);
+    expect(repeats("Creates a new cart, changing system state but not involving money.", "Creates a new empty shopping cart and returns its details.")).toBe(false);
+    expect(repeats("", "anything")).toBe(true);
+  });
+});

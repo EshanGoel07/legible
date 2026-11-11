@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Manifest, Risk, Tool } from "@legible/contracts";
 import type { HiddenRoute } from "@/lib/data";
-import { RISK, money } from "@/lib/format";
+import { RISK, money, repeats } from "@/lib/format";
 import { Banner, Pill } from "@/components/ui";
 
 type View = { manifest: Manifest; displayPath: string; source: "scan" | "fixture"; readOnly: boolean; readOnlyReason: string | null; hidden: HiddenRoute[]; model: string | null };
@@ -107,6 +107,7 @@ function ToolCard({ tool, approved, disabled, onToggle }: { tool: Tool; approved
   const r = RISK[tool.risk];
   const conf = tool.confidence;
   const review = (conf !== undefined && conf < 0.8) || tool.riskReason?.startsWith("Review");
+  const callsTitle = tool.binding.kind === "http" ? `${tool.binding.method} ${tool.binding.path}` : `PayPal via Safe Pay · total from GET ${tool.binding.cartPath}`;
   const props = Object.entries((tool.inputSchema as { properties?: Record<string, { type?: string }> }).properties ?? {});
   const required = new Set(((tool.inputSchema as { required?: string[] }).required ?? []) as string[]);
   return (
@@ -135,9 +136,14 @@ function ToolCard({ tool, approved, disabled, onToggle }: { tool: Tool; approved
         </div>
       )}
 
-      <dl className="mt-4 grid grid-cols-[6.5rem_1fr] gap-x-3 gap-y-2 text-sm">
+      <dl className="mt-4 grid grid-cols-[5.5rem_minmax(0,1fr)] gap-x-3 gap-y-2 text-sm">
         <dt className="text-slate-500">Calls</dt>
-        <dd className="font-mono text-slate-800">{tool.binding.kind === "http" ? `${tool.binding.method} ${tool.binding.path}` : `PayPal via Safe Pay · total from GET ${tool.binding.cartPath}`}</dd>
+        <dd className="flex min-w-0 items-center gap-2" title={callsTitle}>
+          <span className={`shrink-0 rounded px-1.5 py-0.5 font-mono text-[11px] font-semibold ${tool.binding.kind === "http" ? "bg-slate-100 text-slate-700" : "bg-rose-100 text-rose-700"}`}>
+            {tool.binding.kind === "http" ? tool.binding.method : "PAYPAL"}
+          </span>
+          <span className="truncate font-mono text-[13px] text-slate-800">{tool.binding.kind === "http" ? tool.binding.path : `via Safe Pay · total from ${tool.binding.cartPath}`}</span>
+        </dd>
         <dt className="text-slate-500">Inputs</dt>
         <dd className="flex flex-wrap gap-1.5">
           {props.length ? props.map(([k, v]) => (
@@ -166,7 +172,9 @@ function ToolCard({ tool, approved, disabled, onToggle }: { tool: Tool; approved
           </>
         )}
       </dl>
-      {tool.riskReason && <p className={`mt-3 border-t border-slate-100 pt-3 text-sm ${review ? "text-amber-800" : "text-slate-500"}`}>{tool.riskReason}</p>}
+      {tool.riskReason && (review || !repeats(tool.riskReason, tool.description)) && (
+        <p className={`mt-3 border-t border-slate-100 pt-3 text-sm ${review ? "text-amber-800" : "text-slate-500"}`}>{tool.riskReason}</p>
+      )}
     </article>
   );
 }
