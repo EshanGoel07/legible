@@ -24,3 +24,7 @@ Append 2 lines per finished task: `YYYY-MM-DD <owner> — what changed. Next: �
   Next: M5 Crash Test; Groq 8k TPM will throttle the agent loop, keep prompts small.
 - 2026-11-12 Eshan — M5: apps/crashtest (CLI `crash --all`; `run --all` collides with pnpm's run): MCP client per scenario run, LLM tool loop via src/llm.ts, Sandbox auto-approve/decline via Safe Pay test route, Verify before + after, grading → FailureKind, weighted score, Report.parse; 15 Vitest tests. Live: bugs ON 25/100 (tool_error, state_mismatch x2), bugs OFF 100/100.
   Next: M6 dashboard (tools by risk + report page).
+- 2026-11-12 Eshan — M7: root `pnpm demo [--bugs on|off] [--manual] [--exit]` (scripts/demo.ts, Node built-ins only): env + Node 22 + free ports + Chromium preflight, starts store/Safe Pay/Publisher (dashboard only if apps/dashboard exists), /health each, scan, Crash Test, terminal summary from report.json; Ctrl+C stops the process groups. `pnpm crashtest` shortcut. Live: bugs ON 25/100 in 48s, bugs OFF 100/100 in 64s.
+  Next: M8 README, LICENSE, demo script, tests/contracts.
+- 2026-11-12 Eshan — M8: MIT LICENSE; README (problem, Mermaid architecture, clean-clone setup on Node 22, `pnpm demo`, PayPal APIs used, models + how, scanner eval table, before/after bug flags); docs/demo-script.md (2:45); tests/contracts: 7 join tests, 14 tests pass against live services, skip cleanly when services are down.
+  Next: M6 dashboard (or integrate B's), record the video, Devpost write-up.
