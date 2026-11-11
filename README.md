@@ -11,7 +11,7 @@ Built for the PayPal AI Hackathon 2026. MIT licensed.
 
 ## How it works
 1. **Scan**: reads the site's source and writes an agent manifest: tools with risk tiers `read` / `write` / `money`.
-2. **Approve**: a human approves which tools agents get (tools start unapproved).
+2. **Approve**: a human approves which tools agents get in the **dashboard** (tools start unapproved).
 3. **Publish**: approved tools are served as an MCP server (Streamable HTTP). Every call is logged per run.
 4. **Safe Pay**: money tools never touch card data. They create a **PayPal Sandbox order**; a human approves it in
    PayPal; Safe Pay captures, updates the store, and refuses anything over the spending limit before PayPal is called.
@@ -25,7 +25,7 @@ flowchart LR
     Orders["/api/orders (Contract 6)"]
   end
   Scanner["Scanner<br/>ts-morph → LLM → rules"] -- "reads code" --> Site
-  Scanner -- "manifest.json (Contract 1)" --> Human["Human approves tools"]
+  Scanner -- "manifest.json (Contract 1)" --> Human["Dashboard :3004<br/>human approves tools"]
   Human --> Publisher["Publisher<br/>MCP server :3002"]
   Agent["AI agent<br/>(Crash Test)"] -- "MCP + x-legible-run" --> Publisher
   Publisher -- "read / write tools" --> API
@@ -36,7 +36,7 @@ flowchart LR
   SafePay -- "pending → paid / failed" --> Orders
   Publisher -- "calls.jsonl (Contract 2)" --> Crash["Crash Test grader"]
   SafePay -- "Verify (Contract 4)" --> Crash
-  Crash -- "report.json (Contract 5)" --> Report["Agent-Readiness Report"]
+  Crash -- "report.json (Contract 5)" --> Report["Dashboard: Agent-Readiness Report"]
 ```
 
 Modules talk only through Zod contracts in `packages/contracts` and HTTP; no app imports another.
@@ -49,6 +49,7 @@ Modules talk only through Zod contracts in `packages/contracts` and HTTP; no app
 | `apps/publisher` | Manifest → MCP server, per-run call log |
 | `apps/safepay` | PayPal Orders v2 (Sandbox), limits, capture, Verify |
 | `apps/crashtest` | AI agent harness, grading, report |
+| `apps/dashboard` | Next.js: approve tools, read reports (before/after) |
 | `scripts/demo.ts` | `pnpm demo`: the whole golden path in one command |
 
 ## Run it (clean clone, Node 22)
@@ -62,10 +63,19 @@ pnpm validate:fixtures
 pnpm demo                                 # bugs ON: the "before" report
 pnpm demo --bugs off                      # bugs fixed: the "after" report
 ```
-`pnpm demo` checks Node, `.env`, free ports (3001-3003) and Chromium; starts the store, Safe Pay and the Publisher
-and checks each `/health`; scans `demo/store`; runs every scenario; prints the score, each scenario and each failure;
-and leaves the services running (Ctrl+C stops them, or pass `--exit`). Service logs: `runs/demo-logs/`.
-If `apps/dashboard` exists it is started too, and `--manual` waits for you to approve tools there.
+`pnpm demo` checks Node, `.env`, free ports (3001-3004) and Chromium; starts the store, Safe Pay, the Publisher and
+the dashboard and checks each `/health`; scans `demo/store`; runs every scenario; prints the score, each scenario and
+each failure plus a link to the report page; and leaves the services running (Ctrl+C stops them, or pass `--exit`).
+Service logs: `runs/demo-logs/`.
+
+`pnpm demo --manual` is the human-in-the-loop version: the scanner leaves every tool unapproved, the MCP server serves
+nothing, and the demo waits while you approve tools at http://localhost:3004/tools and click **Save manifest** (the MCP
+server picks the change up without a restart). Press Enter and the agent runs on exactly what you approved.
+
+## Dashboard
+| Tools: risk-grouped, approve → MCP server | Report: score, bugs ON vs OFF, evidence |
+|---|---|
+| ![Tools page](docs/img/dashboard-tools.png) | ![Report page](docs/img/dashboard-report.png) |
 
 Other commands: `pnpm test` (unit, no network) · `pnpm typecheck` · `pnpm test:contracts` (one test per module join,
 against running services) · `pnpm crashtest --all` · `pnpm --filter @legible/scanner eval`.

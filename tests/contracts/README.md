@@ -15,3 +15,4 @@ A join whose services are not running is skipped (not failed). Tests pass with s
 | `crashtest-verify.test.ts` | Verify API (Contract 4) |
 | `scanner-publisher.test.ts` | scanned manifest (Contract 1) → served tools |
 | `crashtest-report.test.ts` | newest `report.json` (Contract 5) |
+| `dashboard-report.test.ts` | dashboard serves the report (Contract 5) and manifest (Contract 1) |

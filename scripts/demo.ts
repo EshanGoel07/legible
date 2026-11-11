@@ -15,7 +15,7 @@ import { spawn, type ChildProcess } from "node:child_process";
 import { createWriteStream, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createServer } from "node:net";
 import { createInterface } from "node:readline";
-import { join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { Health, Manifest, Report, ROUTES } from "@legible/contracts";
@@ -197,7 +197,7 @@ async function main() {
   }
 
   if (manual) {
-    console.log(`\n  Approve the tools at ${c.b(URLS.dashboard)}, save the manifest, then press Enter…`);
+    console.log(`\n  ${c.b("Your turn:")} open ${c.b(URLS.dashboard + "/tools")}, approve the tools agents may use, click ${c.b("Save manifest")}, then press Enter here…`);
     await new Promise((r) => createInterface({ input: process.stdin }).once("line", r));
     const m = Manifest.parse(JSON.parse(readFileSync(MANIFEST, "utf8")));
     console.log(`  ${m.tools.filter((t) => t.approved).length}/${m.tools.length} tools approved`);
@@ -216,6 +216,8 @@ async function main() {
 
   // ───── summary from the report itself (Contract 5)
   const report = Report.parse(JSON.parse(readFileSync(reportPath, "utf8")));
+  // Tag the run so the dashboard can show bugs ON vs OFF side by side.
+  writeFileSync(join(dirname(reportPath), "demo.json"), JSON.stringify({ bugs: bugsOn ? "on" : "off", manual, createdAt: report.createdAt }, null, 2) + "\n");
   const bar = report.score >= 80 ? c.g : report.score >= 50 ? c.y : c.r;
   console.log(`\n${"═".repeat(64)}\n${c.b("Agent-Readiness Score")}  ${bar(c.b(`${report.score}/100`))}   site ${report.siteId} · store bugs ${bugsOn ? "ON" : "OFF"}\n${"─".repeat(64)}`);
   for (const s of report.scenarios) {
@@ -225,7 +227,7 @@ async function main() {
   console.log(`${"─".repeat(64)}\nreport    ${reportPath}`);
   console.log(`manifest  ${MANIFEST}`);
   console.log(`logs      ${LOGS}/`);
-  if (hasDashboard) console.log(`dashboard ${URLS.dashboard}`);
+  if (hasDashboard) console.log(`dashboard ${URLS.dashboard}/report?run=${encodeURIComponent(report.runId)}   (tools: ${URLS.dashboard}/tools)`);
   console.log(`MCP       ${URLS.publisher}/mcp   (header x-legible-run)`);
   console.log(c.d(`done in ${((Date.now() - t0) / 1000).toFixed(0)}s`));
   writeFileSync(join(RUNS, "latest-report.txt"), reportPath + "\n");
