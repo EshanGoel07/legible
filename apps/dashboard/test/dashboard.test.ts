@@ -4,7 +4,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Health, Manifest, Report } from "@legible/contracts";
-import { getConfig, hiddenReason, listRuns, loadManifestView, loadReportView, pickComparison, saveManifest, SaveError, type DashConfig } from "../lib/data";
+import { getConfig, hiddenReason, listRuns, loadManifestView, loadReportView, loadTranscript, pickComparison, saveManifest, SaveError, type DashConfig } from "../lib/data";
+import { buildTrace } from "../lib/trace";
 
 const REPO = fileURLToPath(new URL("../../..", import.meta.url));
 const fixture = () => Manifest.parse(JSON.parse(readFileSync(join(REPO, "fixtures/manifest.demo-store.json"), "utf8")));
@@ -144,5 +145,43 @@ describe("card copy", () => {
     expect(repeats("Starts a PayPal payment for the cart total.", "Start a PayPal payment for the cart total and returns the PayPal approval URL.")).toBe(true);
     expect(repeats("Creates a new cart, changing system state but not involving money.", "Creates a new empty shopping cart and returns its details.")).toBe(false);
     expect(repeats("", "anything")).toBe(true);
+  });
+});
+
+describe("agent trace", () => {
+  const entries = [
+    { step: 1, kind: "tool", tool: "add_to_cart", args: { cartId: "c1" }, isError: false, result: "{}" },
+    { step: 2, kind: "tool", tool: "checkout", args: { cartId: "c1" }, isError: false, result: JSON.stringify({ status: "PENDING_APPROVAL" }), note: "Payment update: the human approved in PayPal and the payment was captured (34.00 USD)." },
+    { step: 3, kind: "answer", text: "done" },
+  ];
+  const side = { status: "x", amount: "34.00", currency: "USD" };
+
+  it("loadTranscript reads runs/<id>/transcript.json, and returns null for missing, broken or unsafe ids", () => {
+    mkdirSync(join(tmp, "runs", "r1_s"));
+    writeFileSync(join(tmp, "runs", "r1_s", "transcript.json"), JSON.stringify({ agent: { transcript: entries } }));
+    expect(loadTranscript(cfg, "r1_s")?.length).toBe(3);
+    expect(loadTranscript(cfg, "nope")).toBeNull();
+    expect(loadTranscript(cfg, "../fixtures")).toBeNull();
+    mkdirSync(join(tmp, "runs", "bad"));
+    writeFileSync(join(tmp, "runs", "bad", "transcript.json"), "{ nope");
+    expect(loadTranscript(cfg, "bad")).toBeNull();
+  });
+
+  it("buildTrace: tools by risk, Verify before approval, PayPal, Verify after", () => {
+    const t = buildTrace(entries, { riskByTool: { add_to_cart: "write", checkout: "money" }, verifyPre: { match: false, mismatches: [{ field: "status", paypal: "PAYER_ACTION_REQUIRED", store: "paid" }], paypal: side, store: side }, verifyPost: { match: true, mismatches: [] } });
+    expect(t.map((s) => [s.kind, s.tone])).toEqual([["tool", "write"], ["tool", "money"], ["verify", "fail"], ["paypal", "money"], ["verify", "pass"]]);
+    expect(t[2].detail).toMatch(/store says paid, PayPal says PAYER_ACTION_REQUIRED/);
+    expect(t[3].label).toMatch(/captured/);
+  });
+
+  it("buildTrace: a blocked checkout shows the limit gate; a failed tool is red; missing Verify data is skipped", () => {
+    const t = buildTrace(
+      [
+        { step: 1, kind: "tool", tool: "apply_coupon", isError: true, result: "Error: HTTP 500" },
+        { step: 2, kind: "tool", tool: "checkout", isError: false, result: JSON.stringify({ status: "BLOCKED_LIMIT", message: "Payment blocked" }) },
+      ],
+      { riskByTool: { apply_coupon: "write", checkout: "money" } },
+    );
+    expect(t.map((s) => [s.kind, s.tone])).toEqual([["tool", "fail"], ["tool", "money"], ["gate", "money"]]);
   });
 });

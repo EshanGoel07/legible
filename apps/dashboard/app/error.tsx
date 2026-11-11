@@ -5,7 +5,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
   return (
     <div>
       <ErrorCard title="This page failed to load" message={error.message} hint="Check that runs/ and the manifest are readable, then retry." />
-      <div className="mt-4 text-center"><button onClick={reset} className="rounded-lg bg-slate-900 px-4 py-2 font-medium text-white">Retry</button></div>
+      <div className="-mt-8 pb-16 text-center"><button onClick={reset} className="rounded-lg bg-ink px-5 py-2.5 font-semibold text-white hover:bg-ink-2">Retry</button></div>
     </div>
   );
 }

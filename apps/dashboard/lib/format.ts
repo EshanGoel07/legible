@@ -9,21 +9,22 @@ export const when = (iso: string) =>
   new Date(iso).toLocaleString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
 
 export const RISK: Record<Risk, { label: string; blurb: string; dot: string; badge: string; ring: string; head: string }> = {
-  read: { label: "Read", blurb: "Look things up. Changes nothing.", dot: "bg-emerald-500", badge: "bg-emerald-50 text-emerald-700 ring-emerald-200", ring: "ring-emerald-200", head: "text-emerald-700" },
-  write: { label: "Write", blurb: "Changes data on the site. No money moves.", dot: "bg-amber-500", badge: "bg-amber-50 text-amber-800 ring-amber-200", ring: "ring-amber-200", head: "text-amber-700" },
-  money: { label: "Money", blurb: "Moves money. Always through PayPal, with a human approving.", dot: "bg-rose-500", badge: "bg-rose-50 text-rose-700 ring-rose-200", ring: "ring-rose-200", head: "text-rose-700" },
+  read: { label: "Read", blurb: "Look things up. Changes nothing.", dot: "bg-slate-400", badge: "bg-slate-100 text-slate-700 ring-slate-300", ring: "ring-slate-300", head: "text-slate-700" },
+  write: { label: "Write", blurb: "Changes data on the site. No money moves.", dot: "bg-warn", badge: "bg-warn/10 text-[#8a4f10] ring-warn/40", ring: "ring-warn/40", head: "text-[#8a4f10]" },
+  money: { label: "Money", blurb: "Moves money. Always through PayPal, with a human approving.", dot: "bg-guard", badge: "bg-guard/10 text-guard ring-guard/30", ring: "ring-guard/40", head: "text-guard" },
 };
 
+/** Red is reserved for failures; the two "the guard itself was beaten" kinds are solid. */
 export const FAILURE: Record<string, { label: string; cls: string }> = {
-  tool_error: { label: "Tool error", cls: "bg-rose-50 text-rose-700 ring-rose-200" },
-  state_mismatch: { label: "State mismatch", cls: "bg-violet-50 text-violet-700 ring-violet-200" },
-  wrong_amount: { label: "Wrong amount", cls: "bg-amber-50 text-amber-800 ring-amber-200" },
-  task_failed: { label: "Task failed", cls: "bg-slate-100 text-slate-700 ring-slate-200" },
-  limit_bypassed: { label: "Limit bypassed", cls: "bg-red-100 text-red-800 ring-red-300" },
-  injection_followed: { label: "Injection followed", cls: "bg-red-100 text-red-800 ring-red-300" },
+  tool_error: { label: "Tool error", cls: "bg-fail/10 text-[#b4232a] ring-fail/40" },
+  state_mismatch: { label: "State mismatch", cls: "bg-fail/10 text-[#b4232a] ring-fail/40" },
+  wrong_amount: { label: "Wrong amount", cls: "bg-fail/10 text-[#b4232a] ring-fail/40" },
+  task_failed: { label: "Task failed", cls: "bg-slate-100 text-slate-700 ring-slate-300" },
+  limit_bypassed: { label: "Limit bypassed", cls: "bg-fail text-white ring-fail" },
+  injection_followed: { label: "Injection followed", cls: "bg-fail text-white ring-fail" },
 };
 
-export const scoreColor = (s: number) => (s >= 80 ? { text: "text-emerald-600", stroke: "#059669", soft: "bg-emerald-50" } : s >= 50 ? { text: "text-amber-600", stroke: "#d97706", soft: "bg-amber-50" } : { text: "text-rose-600", stroke: "#e11d48", soft: "bg-rose-50" });
+export const scoreColor = (s: number) => (s >= 80 ? { text: "text-pass", stroke: "#12a594", soft: "bg-pass/10" } : s >= 50 ? { text: "text-warn", stroke: "#d9822b", soft: "bg-warn/10" } : { text: "text-fail", stroke: "#e5484d", soft: "bg-fail/10" });
 
 /** True when `reason` mostly repeats `description` (the scanner sometimes restates it); then the card shows it once. */
 export function repeats(reason: string, description: string): boolean {

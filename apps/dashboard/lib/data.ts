@@ -250,3 +250,24 @@ export function scenarioTasks(cfg: DashConfig): Record<string, string> {
   return out;
 }
 
+
+// ───────────────────────── agent transcripts (Crash Test writes runs/<scenarioRunId>/transcript.json)
+
+const TranscriptEntry = z.object({
+  step: z.number(),
+  kind: z.string(),
+  tool: z.string().optional(),
+  args: z.record(z.unknown()).optional(),
+  isError: z.boolean().optional(),
+  result: z.string().optional(),
+  note: z.string().optional(),
+  text: z.string().optional(),
+});
+export type TranscriptEntry = z.infer<typeof TranscriptEntry>;
+const TranscriptFile = z.object({ agent: z.object({ transcript: z.array(TranscriptEntry) }) });
+
+/** What the agent did, step by step, or null when the file is missing or unreadable (the report still renders). */
+export function loadTranscript(cfg: DashConfig, scenarioRunId: string): TranscriptEntry[] | null {
+  if (!/^[A-Za-z0-9][A-Za-z0-9_.-]*$/.test(scenarioRunId) || scenarioRunId.includes("..")) return null;
+  return readOptional(join(cfg.runsDir, scenarioRunId, "transcript.json"), TranscriptFile)?.agent.transcript ?? null;
+}
