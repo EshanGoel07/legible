@@ -26,6 +26,7 @@ const service = new SafePayService({
     : undefined,
 });
 
-createApp(service, { testMode: cfg.testMode }).listen(cfg.port, () => {
+createApp(service, { testMode: cfg.testMode }).listen(cfg.port, (err?: Error) => {
+  if (err) { console.error(`[safepay] cannot listen on port ${cfg.port}: ${err.message}`); process.exit(1); }
   console.log(`[safepay] listening on ${cfg.safepayUrl} (port ${cfg.port}) · store ${cfg.storeUrl} · PayPal Sandbox · test mode ${cfg.testMode ? "ON" : "off"}`);
 });

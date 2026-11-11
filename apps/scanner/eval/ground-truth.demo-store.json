@@ -1,0 +1,19 @@
+{
+  "site": "demo-store",
+  "root": "demo/store",
+  "labelledBy": "Eshan (hand-labelled 2026-11-12 from demo/store/src/routes)",
+  "notes": "One row per route registration (stage-1 universe; /health is filtered as infra and not counted). expose = an AI shopping agent should get it as a tool. risk = the tier it should have whether or not it is exposed.",
+  "routes": [
+    { "method": "GET",  "path": "/api/products",                  "expose": true,  "name": "search_products", "risk": "read",  "why": "catalogue search" },
+    { "method": "GET",  "path": "/api/products/:productId",       "expose": true,  "name": "get_product",     "risk": "read",  "why": "product detail" },
+    { "method": "POST", "path": "/api/cart",                      "expose": true,  "name": "create_cart",     "risk": "write", "why": "creates a cart, no money" },
+    { "method": "GET",  "path": "/api/cart/:cartId",              "expose": true,  "name": "get_cart",        "risk": "read",  "why": "agent needs totals before paying" },
+    { "method": "POST", "path": "/api/cart/:cartId/items",        "expose": true,  "name": "add_to_cart",     "risk": "write", "why": "changes cart, no money" },
+    { "method": "POST", "path": "/api/cart/:cartId/coupon",       "expose": true,  "name": "apply_coupon",    "risk": "write", "why": "changes total, no payment" },
+    { "method": "POST", "path": "/api/cart/:cartId/checkout",     "expose": true,  "name": "checkout",        "risk": "money", "why": "starts a PayPal payment" },
+    { "method": "POST", "path": "/api/orders",                    "expose": false, "risk": "money", "why": "Safe Pay records the order; agent calling it would fake an order" },
+    { "method": "GET",  "path": "/api/orders/:checkoutId",        "expose": false, "risk": "read",  "why": "Safe Pay / Verify internal read" },
+    { "method": "POST", "path": "/api/orders/:checkoutId/status", "expose": false, "risk": "money", "why": "marks an order paid: payment service only" },
+    { "method": "POST", "path": "/web/cart/:cartId/coupon",       "expose": false, "risk": "write", "why": "web-page duplicate of apply_coupon" }
+  ]
+}

@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "legible": {
+    "siteId": "demo-store",
+    "siteName": "Legible Demo Store"
+  },
   "scripts": {
     "dev": "tsx src/server.ts",
     "dev:fixture": "BUG_COUPON_API=0 BUG_PAID_EARLY=0 tsx src/server.ts",
