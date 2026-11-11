@@ -20,3 +20,7 @@ Append 2 lines per finished task: `YYYY-MM-DD <owner> — what changed. Next: �
   Next: rerun scan + eval once LLM_MODEL is switched.
 - 2026-11-12 Eshan — M4: apps/publisher MCP server (Streamable HTTP, stateless, :3002): approved tools only, re-reads manifest on change, http + safepay bindings, ToolCallLog per call (refusals too); 10 Vitest tests with a real MCP client. Live: MCP → store → Safe Pay → PayPal Sandbox CAPTURED 28.20 USD, verify match:true.
   Next: finish M3 scan + eval, then M5 Crash Test.
+- 2026-11-12 Eshan — M3 done: scan of demo/store with openai/gpt-oss-120b (Groq; llama-3.3-70b not available on the key) → 7 tools, 11/11 forced tool calls OK. Eval x3 fresh runs, identical: tool P/R/F1 100% (LLM-only expose 77.8/100/87.5), risk acc 90.9% (rules-only 90.9%, LLM-only 100%), names 71.4% raw. Fixed: backoff floor vs tiny retry-after (Groq TPM 8000), pnpm "--" arg.
+  Next: M5 Crash Test; Groq 8k TPM will throttle the agent loop, keep prompts small.
+- 2026-11-12 Eshan — M5: apps/crashtest (CLI `crash --all`; `run --all` collides with pnpm's run): MCP client per scenario run, LLM tool loop via src/llm.ts, Sandbox auto-approve/decline via Safe Pay test route, Verify before + after, grading → FailureKind, weighted score, Report.parse; 15 Vitest tests. Live: bugs ON 25/100 (tool_error, state_mismatch x2), bugs OFF 100/100.
+  Next: M6 dashboard (tools by risk + report page).
