@@ -28,6 +28,10 @@ export const AGENT_SYSTEM_PROMPT = `You are an AI shopping agent for an online s
 - If a tool error is your mistake (e.g. a missing field), fix it. If the store fails (HTTP 5xx), or a payment is blocked or declined, do not work around it: stop.
 - Finish with a 1-3 sentence summary of what happened. Do not ask questions.`;
 
+/** Provider-side rejection of the model's tool-call arguments (not a site failure). */
+export const INVALID_TOOL_CALL = /tool call validation failed|did not match schema|invalid tool call|Failed to call a function/i;
+export const MAX_TOOL_REPAIRS = 2;
+
 /** Keep tool results small: free tiers count every token of history. */
 export const clip = (s: string, n = 1500) => (s.length > n ? `${s.slice(0, n)}… [truncated ${s.length - n} chars]` : s);
 const compact = (text: string) => {
@@ -46,12 +50,23 @@ export async function runAgent(task: string, deps: AgentDeps): Promise<AgentRun>
     { role: "user", content: task },
   ];
   const transcript: TranscriptEntry[] = [];
+  let repairs = 0;
 
   for (let step = 1; step <= maxSteps; step++) {
     let msg: ChatMessage;
     try {
       msg = await deps.chat(messages, tools);
     } catch (e) {
+      // Some providers (e.g. Groq) validate the model's tool arguments server-side and reject the whole request
+      // (HTTP 400) when the model sends e.g. null for an optional number. That is the model's mistake, not the site's:
+      // tell it what was wrong and let it try again (max MAX_TOOL_REPAIRS per run).
+      const m = (e as Error).message ?? "";
+      if (INVALID_TOOL_CALL.test(m) && repairs < MAX_TOOL_REPAIRS) {
+        repairs++;
+        deps.log?.(`step ${step}: provider rejected the model's tool call (${m.slice(0, 140)}); asking it to retry (${repairs}/${MAX_TOOL_REPAIRS})`);
+        messages.push({ role: "user", content: `Your last tool call was rejected: ${m.slice(0, 300)}\nOmit optional parameters instead of sending null, use the documented types, and try again.` });
+        continue;
+      }
       return { steps: step, stoppedBy: "error", final: null, error: (e as Error).message, transcript };
     }
     const calls = (msg.tool_calls ?? []).filter((c) => c.type === "function");

@@ -117,6 +117,23 @@ describe("agent loop", () => {
     expect(run.stoppedBy).toBe("max_steps");
     expect(run.transcript[0]).toMatchObject({ isError: true });
   });
+  it("provider rejects the model's tool args (Groq 400): the model is told why and retries, max 2 times", async () => {
+    const reject = () => Object.assign(new Error("400 Tool call validation failed: parameters for tool search_products did not match schema: errors: [`/maxPrice`: expected number, but got null]"), { status: 400 });
+    const seen: any[][] = [];
+    const replies: Array<() => any> = [
+      () => { throw reject(); },
+      () => ({ content: null, tool_calls: [{ id: "1", type: "function", function: { name: "search_products", arguments: '{"q":"hoodie"}' } }] }),
+      () => ({ content: "Done.", tool_calls: [] }),
+    ];
+    const run = await runAgent("x", { chat: async (m) => (seen.push(structuredClone(m)), replies.shift()!()), tools, callTool: async () => ({ text: "{}", isError: false }) });
+    expect(run).toMatchObject({ stoppedBy: "answer", final: "Done." });
+    expect(seen[1].at(-1)).toMatchObject({ role: "user" });
+    expect(seen[1].at(-1).content).toMatch(/Omit optional parameters instead of sending null/);
+
+    const always = await runAgent("x", { chat: async () => { throw reject(); }, tools, callTool: async () => ({ text: "", isError: false }) });
+    expect(always).toMatchObject({ stoppedBy: "error", steps: 3 });
+  });
+
   it("LLM errors stop the run with stoppedBy=error", async () => {
     const run = await runAgent("x", { chat: async () => { throw new Error("429 forever"); }, tools, callTool: async () => ({ text: "", isError: false }) });
     expect(run).toMatchObject({ stoppedBy: "error", error: "429 forever" });

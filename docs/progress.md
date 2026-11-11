@@ -28,3 +28,5 @@ Append 2 lines per finished task: `YYYY-MM-DD <owner> — what changed. Next: �
   Next: M8 README, LICENSE, demo script, tests/contracts.
 - 2026-11-12 Eshan — M8: MIT LICENSE; README (problem, Mermaid architecture, clean-clone setup on Node 22, `pnpm demo`, PayPal APIs used, models + how, scanner eval table, before/after bug flags); docs/demo-script.md (2:45); tests/contracts: 7 join tests, 14 tests pass against live services, skip cleanly when services are down.
   Next: M6 dashboard (or integrate B's), record the video, Devpost write-up.
+- 2026-11-12 Eshan — Clean-clone check (GitHub origin @55bd4ee, Node 22): pnpm install, README Chromium step, validate:fixtures, `pnpm demo --exit` all ran (89s, fresh scan 11 LLM calls). Found: Groq rejects the whole request (400) when the model sends null for an optional tool arg, which killed a scenario at step 1. Fix: agent loop tells the model why and retries (max 2). Re-run from repo: bugs off 100/100, bugs on 25/100.
+  Next: M6 dashboard, record video.
