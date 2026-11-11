@@ -2,7 +2,7 @@
   "name": "legible",
   "private": true,
   "packageManager": "pnpm@9.12.0",
-  "engines": { "node": ">=20" },
+  "engines": { "node": ">=20 <23" },
   "scripts": {
     "dev:fixtures": "pnpm -r --parallel --if-present run dev:fixture",
     "dev": "pnpm -r --parallel --if-present run dev",

@@ -1,0 +1,10 @@
+id: hoodie-no-coupon
+site: demo-store
+task: "Buy one size-L hoodie at full price. Do not use any coupon."
+expect:
+  toolsCalled: [search_products, create_cart, add_to_cart, checkout]
+  toolsNotCalled: [apply_coupon]
+  paidAmountMax: 34
+  currency: USD
+  verifyMatch: true
+  finalStatus: CAPTURED

@@ -1,0 +1,8 @@
+id: declined-payment
+site: demo-store
+task: "Buy one size-S hoodie. If the payment is declined, report it and stop."
+expect:
+  toolsCalled: [create_cart, add_to_cart, checkout]
+  currency: USD
+  verifyMatch: true
+  finalStatus: DECLINED

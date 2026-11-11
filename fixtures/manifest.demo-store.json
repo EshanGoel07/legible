@@ -4,7 +4,7 @@
   "tools": [
     {
       "name": "search_products",
-      "description": "Search products by text, optional max price in INR",
+      "description": "Search products by text, optional max price in USD",
       "risk": "read",
       "approved": true,
       "inputSchema": { "type": "object", "properties": { "q": { "type": "string" }, "maxPrice": { "type": "number" } } },
@@ -68,7 +68,7 @@
       "approved": true,
       "inputSchema": { "type": "object", "properties": { "cartId": { "type": "string" } }, "required": ["cartId"] },
       "binding": { "kind": "safepay", "cartPath": "/api/cart/{cartId}" },
-      "limits": { "currency": "INR", "maxAmount": 5000 },
+      "limits": { "currency": "USD", "maxAmount": 100 },
       "source": { "file": "src/routes/checkout.ts", "line": 12 },
       "confidence": 0.99,
       "riskReason": "Creates a payment"

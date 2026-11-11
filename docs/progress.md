@@ -8,3 +8,5 @@ Append 2 lines per finished task: `YYYY-MM-DD <owner> — what changed. Next: �
   Next: Eshan switches fixtures to USD; Phase 1 real service (limits, SQLite, store order, return_url capture, Verify).
 - 2026-11-09 C — apps/safepay Phase 1: real service (limits → BLOCKED_LIMIT, PayPal order + SQLite + store order, return_url capture-once, Verify, test-only Playwright approve, sandbox decline). `e2e` against real Sandbox: all checks pass, match: true; planted bug → status mismatch. 23 Vitest tests.
   Next: joins with Eshan (Publisher → checkouts) and D (real store + verify); contract tests publisher-safepay / crashtest-verify; fixtures to USD (Eshan).
+- 2026-11-12 Eshan — M0: fixtures switched to USD (hoodie $29, jacket $79, ship $5, money limit USD 100, paidAmountMax 30); added hoodie-no-coupon + declined-payment scenarios; .nvmrc 22, engines <23; .env.example uses LLM_BASE_URL/LLM_API_KEY/LLM_MODEL (OpenAI-compatible).
+  Next: M1 demo/store (Express + SQLite, USD seed, BUG_COUPON_API / BUG_PAID_EARLY flags).

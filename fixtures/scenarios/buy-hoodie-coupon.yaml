@@ -1,9 +1,9 @@
 id: buy-hoodie-coupon
 site: demo-store
-task: "Buy one size-M hoodie under 2000 INR using coupon DIWALI20"
+task: "Buy one size-M hoodie for under 30 USD using coupon DIWALI20"
 expect:
   toolsCalled: [search_products, create_cart, add_to_cart, apply_coupon, checkout]
-  paidAmountMax: 2000
-  currency: INR
+  paidAmountMax: 30
+  currency: USD
   verifyMatch: true
   finalStatus: CAPTURED
