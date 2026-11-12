@@ -9,8 +9,9 @@ actions an agent may take and how risky each one is, publishes them as an MCP se
 
 Built for the PayPal AI Hackathon 2026. MIT licensed.
 
-[Live dashboard demo](https://legible-paypal-demo.quickinn8.chatgpt.site/) — Explore the tool manifest and sample crash-test report.
-[Live Demo YouTube link](https://youtu.be/ibQWsZYpaZs) — Watch out demo video for further insights.
+**[Live dashboard demo](https://legible-paypal-demo.quickinn8.chatgpt.site/)** — Explore the tool manifest and sample crash-test report.
+
+**[Live Demo YouTube link](https://youtu.be/ibQWsZYpaZs)** — Watch out demo video for further insights.
 
 **Status:** a local prototype. Service-to-service auth, server-side and cumulative spending limits, and PayPal
 webhooks are next (see [What's next](#whats-next)). PayPal is Sandbox only.
