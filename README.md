@@ -153,5 +153,6 @@ Run `pnpm test` for offline unit tests and `pnpm typecheck` for type checks. Wit
 Built by Team Legible for the PayPal AI Hackathon 2026:
 - **Eshan Goel** (lead): architecture and contracts, scanner, MCP publisher, crash test, dashboard, integration and demo.
 - **Aryan Kansal**: Safe Pay, the PayPal Sandbox integration (Orders v2, spending limits, order verification).
+- **Aryan Shukla**: PR reviews, Demo store, Payment-state, portable launch configuration, normalized serialized paths
 
 Contributor guide for people and coding agents: [`AGENTS.md`](AGENTS.md) · progress log: [`docs/progress.md`](docs/progress.md).
