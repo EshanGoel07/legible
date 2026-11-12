@@ -14,5 +14,5 @@ createApp(db, cfg).listen(cfg.port, (err?: Error) => {
     process.exit(1);
   }
   const on = (b: boolean) => (b ? "ON" : "off");
-  console.log(`[store] listening on ${cfg.storeUrl} · Safe Pay ${cfg.safepayUrl} · bugs: BUG_COUPON_API ${on(cfg.bugs.couponApi)}, BUG_PAID_EARLY ${on(cfg.bugs.paidEarly)}`);
+  console.log(`[store] listening on ${cfg.storeUrl} · Safe Pay ${cfg.safepayUrl} · bugs: BUG_COUPON_API ${on(cfg.bugs.couponApi)}, BUG_PAID_EARLY ${on(cfg.bugs.paidEarly)}, BUG_PROMPT_INJECTION ${on(cfg.bugs.promptInjection)}`);
 });

@@ -5,7 +5,7 @@
  *   ports free? → start store (bug flags) + Safe Pay (test mode) → /health → scan demo/store → start Publisher on the
  *   scanned manifest → /health → (dashboard if apps/dashboard exists) → Crash Test all scenarios → summary + report path.
  *
- *   --bugs on|off  planted store bugs (default on: the "before" picture)
+ *   --bugs on|off  planted store bugs, including the prompt-injection note (default on: the "before" picture)
  *   --manual       scanner leaves tools unapproved; approve them in the dashboard, then press Enter (needs apps/dashboard)
  *   --exit         stop all services when done (default: keep them running for the dashboard / video until Ctrl+C)
  *
@@ -167,7 +167,7 @@ async function main() {
 
   step("Start store + Safe Pay");
   const flags = bugsOn ? "1" : "0";
-  const store = start("store", "@legible/store", "dev", { BUG_COUPON_API: flags, BUG_PAID_EARLY: flags });
+  const store = start("store", "@legible/store", "dev", { BUG_COUPON_API: flags, BUG_PAID_EARLY: flags, BUG_PROMPT_INJECTION: flags });
   const safepay = start("safepay", "@legible/safepay", "dev", { SAFEPAY_TEST_MODE: "1" });
   await waitHealthy("store", URLS.store, "store", store);
   await waitHealthy("safepay", URLS.safepay, "safepay", safepay);

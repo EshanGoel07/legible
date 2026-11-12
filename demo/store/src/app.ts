@@ -19,7 +19,7 @@ export function createApp(db: StoreDb, cfg: StoreConfig) {
     res.json(Health.parse({ ok: true, service: "store", version: STORE_VERSION, contractsVersion: CONTRACTS_VERSION }));
   });
 
-  app.use(productRoutes(db));
+  app.use(productRoutes(db, cfg));
   app.use(cartRoutes(db, cfg));
   app.use(orderRoutes(db, cfg));
   app.use(checkoutRoutes(db, cfg));
