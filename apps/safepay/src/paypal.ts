@@ -109,7 +109,12 @@ export class PayPalClient {
     return (await res.json()) as T;
   }
 
-  createOrder(opts: { amount: string; currency: string; returnUrl: string; cancelUrl: string; referenceId?: string; requestId?: string }) {
+  /**
+   * @param opts.brandName shown to the buyer on the PayPal approval page
+   * @param opts.description what is being paid for (shown to the buyer)
+   * @param opts.customId our own reference stored on the PayPal order (the Crash Test / agent run id)
+   */
+  createOrder(opts: { amount: string; currency: string; returnUrl: string; cancelUrl: string; referenceId?: string; requestId?: string; brandName?: string; description?: string; customId?: string }) {
     return this.call<PayPalOrder>(
       "POST",
       "/v2/checkout/orders",
@@ -117,11 +122,17 @@ export class PayPalClient {
       {
         intent: "CAPTURE",
         purchase_units: [
-          { reference_id: opts.referenceId, amount: { currency_code: opts.currency, value: opts.amount } },
+          {
+            reference_id: opts.referenceId,
+            ...(opts.description ? { description: opts.description.slice(0, 127) } : {}),
+            ...(opts.customId ? { custom_id: opts.customId.slice(0, 127) } : {}),
+            amount: { currency_code: opts.currency, value: opts.amount },
+          },
         ],
         payment_source: {
           paypal: {
             experience_context: {
+              ...(opts.brandName ? { brand_name: opts.brandName.slice(0, 127) } : {}),
               return_url: opts.returnUrl,
               cancel_url: opts.cancelUrl,
               user_action: "PAY_NOW",

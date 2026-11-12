@@ -25,6 +25,25 @@ describe("PayPal client", () => {
     expect(body).toMatchObject({ intent: "CAPTURE", purchase_units: [{ amount: { currency_code: "INR", value: "1499.00" } }] });
   });
 
+  it("create order: brand name, description and custom_id (run id) are sent when given, omitted otherwise", async () => {
+    const order = { id: "ORDER2", status: "PAYER_ACTION_REQUIRED", links: [] };
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(json(200, { access_token: "tok", expires_in: 3600 }))
+      .mockResolvedValueOnce(json(201, order))
+      .mockResolvedValueOnce(json(201, order));
+    const client = new PayPalClient(cfg, fetchMock as unknown as typeof fetch);
+    const base = { amount: "34.00", currency: "USD", returnUrl: "http://localhost:3003/r", cancelUrl: "http://localhost:3003/c" };
+    await client.createOrder({ ...base, brandName: "Legible Demo Store", description: "AI agent purchase", customId: "r_20261112_000000_hoodie-no-coupon" });
+    const withFields = JSON.parse(fetchMock.mock.calls[1][1].body);
+    expect(withFields.purchase_units[0]).toMatchObject({ description: "AI agent purchase", custom_id: "r_20261112_000000_hoodie-no-coupon", amount: { currency_code: "USD", value: "34.00" } });
+    expect(withFields.payment_source.paypal.experience_context).toMatchObject({ brand_name: "Legible Demo Store", user_action: "PAY_NOW" });
+    await client.createOrder(base);
+    const bare = JSON.parse(fetchMock.mock.calls[2][1].body);
+    expect(bare.purchase_units[0]).not.toHaveProperty("custom_id");
+    expect(bare.purchase_units[0]).not.toHaveProperty("description");
+    expect(bare.payment_source.paypal.experience_context).not.toHaveProperty("brand_name");
+  });
+
   it("errors carry PayPal's issue and debug_id but never the secret or token", async () => {
     const fetchMock = vi.fn()
       .mockResolvedValueOnce(json(200, { access_token: "tok-abc", expires_in: 3600 }))

@@ -1,6 +1,6 @@
 /**
  * One scenario: new runId → MCP client (x-legible-run) → agent loop → on PENDING_APPROVAL: Verify, approve via
- * Safe Pay's test route (decline when the scenario expects DECLINED), Verify again → grade from calls.jsonl + Verify.
+ * Safe Pay's test route (a simulated decline via PayPal negative testing when the scenario expects DECLINED), Verify again → grade from calls.jsonl + Verify.
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -38,7 +38,7 @@ export async function runScenario(scenario: Scenario, ctx: HarnessCtx): Promise<
     return { text: r.content?.map((c: any) => c.text ?? "").join("\n") ?? "", isError: !!r.isError };
   };
 
-  /** The human-in-the-loop step, automated for the test: approve (or decline) in the PayPal Sandbox. */
+  /** The human-in-the-loop step, automated for the test only: the sandbox buyer approves; a "decline" is PayPal's negative-testing mock on the capture. */
   const afterTool = async (name: string, _args: Record<string, unknown>, result: ToolResult): Promise<string | null> => {
     if (!moneyTools.has(name) || result.isError) return null;
     let out: any;
@@ -53,7 +53,7 @@ export async function runScenario(scenario: Scenario, ctx: HarnessCtx): Promise<
     try {
       ev.verifyPre = VerifyResult.parse(await getJson(sp(ROUTES.safepay.verify, out.checkoutId)));
       const decline = scenario.expect.finalStatus === "DECLINED";
-      ctx.log(`  PayPal Sandbox: ${decline ? "declining" : "approving"} ${out.amount} ${out.currency} as the test buyer…`);
+      ctx.log(decline ? `  PayPal Sandbox: simulated decline (PayPal negative testing) of ${out.amount} ${out.currency}…` : `  PayPal Sandbox: approving ${out.amount} ${out.currency} as the test buyer…`);
       const done = Checkout.parse(await getJson(sp(ROUTES.safepay.testApprove, out.checkoutId) + (decline ? "?outcome=decline" : ""), { method: "POST" }));
       ev.checkout = { checkoutId: done.checkoutId, status: done.status, amount: done.amount, currency: done.currency };
       ev.verifyPost = VerifyResult.parse(await getJson(sp(ROUTES.safepay.verify, out.checkoutId)));

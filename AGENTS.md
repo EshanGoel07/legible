@@ -44,7 +44,7 @@ it calls the real service and `parse`s every response with the contract schema. 
 | --- | --- |
 | `packages/contracts/`, `fixtures/`, `scripts/`, root config | Eshan (lead) — humans only |
 | `apps/scanner/`, `apps/publisher/` | Eshan |
-| `apps/dashboard/`, `apps/webmcp/` | Teammate B |
+| `apps/dashboard/` | Teammate B |
 | `apps/safepay/` | Teammate C |
 | `apps/crashtest/`, `demo/store/` | Teammate D (Codex) |
 | `tests/contracts/` | everyone, one file per join |

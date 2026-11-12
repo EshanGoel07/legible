@@ -27,6 +27,10 @@ export class HttpError extends Error {
 /** PayPal 422 issues that mean the payment was declined (vs. a programming / state error). */
 const DECLINE_ISSUES = new Set(["INSTRUMENT_DECLINED", "TRANSACTION_REFUSED", "PAYER_CANNOT_PAY", "PAYEE_BLOCKED_TRANSACTION", "MAX_NUMBER_OF_PAYMENT_ATTEMPTS_EXCEEDED"]);
 
+/** What the human sees on the PayPal approval page, so it is obvious an agent started this payment. */
+export const BRAND_NAME = "Legible Demo Store";
+export const ORDER_DESCRIPTION = "AI agent purchase";
+
 export type SafePayDeps = {
   repo: CheckoutRepo;
   paypal: PayPalApi;
@@ -103,6 +107,9 @@ export class SafePayService {
         cancelUrl: `${returnBase}&cancelled=1`,
         referenceId: checkoutId,
         requestId: `${checkoutId}-create`,
+        brandName: BRAND_NAME,
+        description: ORDER_DESCRIPTION,
+        ...(req.runId ? { customId: req.runId } : {}),
       });
     } catch (e) {
       if (e instanceof PayPalError) throw new HttpError(502, "paypal_create_failed", e.message, { issues: e.issues, debugId: e.debugId });

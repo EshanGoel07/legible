@@ -1,10 +1,10 @@
-# Brief — Teammate B: Dashboard (+ WebMCP stretch, submission draft)
+# Brief — Teammate B: Dashboard (+ submission draft)
 
 **Your job in one line:** the web app a developer actually sees — approve the tools the Scanner found, and read
 the Crash Test report. It's what judges look at in the demo video, so it should be clear and good-looking.
 
 ## You own
-`apps/dashboard/`, `apps/webmcp/` (stretch). Touch nothing else (see AGENTS.md).
+`apps/dashboard/`. Touch nothing else (see AGENTS.md).
 
 ## Contracts (read-only for you — import from `@legible/contracts`)
 - **Contract 1** `Manifest` — read it, let the user toggle `approved` and edit `description`, write it back (must still pass `Manifest.parse`)
@@ -36,10 +36,6 @@ Next.js (App Router) + TypeScript + Tailwind · `zod` via `@legible/contracts` �
 ## Tue 10 — polish + feature freeze 22:00
 - [ ] Dashboard is the face of the demo: clean layout, readable on a laptop recording, loading/empty/error states
 - [ ] Contract test `tests/contracts/dashboard-report.test.ts`: real `report.json` parses and renders
-
-## Wed — stretch: WebMCP output (`apps/webmcp`)
-A small script: manifest in → a JS file that calls `navigator.modelContext.registerTool(...)` for each approved tool
-(with a polyfill so it works today). Reads only `Manifest` — no other module depends on it, so it can be dropped safely.
 
 ## Thu — submission draft (you lead this)
 - Devpost write-up draft: problem, how it works, PayPal APIs used, what's next (Eshan edits)
