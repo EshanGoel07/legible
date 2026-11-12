@@ -6,8 +6,10 @@ Legible scans an Express/TypeScript store and publishes the routes you approve a
 
 Built for the **PayPal AI Hackathon 2026**. The full prototype runs locally and uses PayPal Sandbox. MIT licensed.
 
-**[Watch the demo on YouTube](https://youtu.be/ibQWsZYpaZs)** · **[Explore the hosted dashboard](https://legible-demo-site.netlify.app)**  
-The hosted dashboard shows a sample tool manifest and crash-test report. To scan the store and run the agent yourself, follow the [local setup](#run-it-locally).
+[![Legible demo: an AI agent shops through MCP, PayPal Sandbox payments are verified, planted bugs and a prompt injection are caught](docs/img/demo.gif)](https://youtu.be/ibQWsZYpaZs)
+
+**[▶ Watch the full demo (2:20)](https://youtu.be/ibQWsZYpaZs)** · **[Explore the hosted dashboard](https://legible-demo-site.netlify.app)**  
+The hosted dashboard is a read-only snapshot of the two real PayPal Sandbox runs below (tool approvals are disabled there). To scan the store and run the agent yourself, follow the [local setup](#run-it-locally).
 
 ## What the crash test found
 
@@ -87,7 +89,7 @@ In the automated demo, Playwright signs in as the Sandbox buyer and approves ord
 
 ## AI and scanner evaluation
 
-The scanner and Crash Test agent use the same model through an OpenAI-compatible API. The scanner requests one structured `describe_route` tool call per route, validates the output with Zod and caches it by prompt hash. The agent uses the model to choose its next MCP tool call. We used Claude Code and Codex during development.
+The scanner and Crash Test agent use the same model through an OpenAI-compatible API. The scanner requests one structured `describe_route` tool call per route, validates the output with Zod and caches it by prompt hash. The agent uses the model to choose its next MCP tool call. We used Claude Code and Codex during development. The demo video's voiceover was generated with ElevenLabs and its animated inserts with OpenAI Astra; every product shot in it is a real recording of Legible running.
 
 We evaluated the scanner on **11 hand-labelled routes from one Express store**. Both model configurations identified all seven intended tools. Without the scanner’s final rules, both models also proposed exposing two internal order routes.
 
@@ -137,3 +139,10 @@ Run `pnpm test` for offline unit tests and `pnpm typecheck` for type checks. Wit
 - Use PayPal webhooks to complete checkout independently of the buyer’s browser return. Add refunds through Payments v2 and verify the result.
 - Compare the same agent using the PayPal Agent Toolkit directly and using Legible.
 - Benchmark a second store and extend the scanner to Next.js, FastAPI and Rails.
+
+## Team
+Built by Team Legible for the PayPal AI Hackathon 2026:
+- **Eshan Goel** (lead): architecture and contracts, scanner, MCP publisher, crash test, dashboard, integration and demo.
+- **Aryan Kansal**: Safe Pay, the PayPal Sandbox integration (Orders v2, spending limits, order verification).
+
+Contributor guide for people and coding agents: [`AGENTS.md`](AGENTS.md) · progress log: [`docs/progress.md`](docs/progress.md).
