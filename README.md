@@ -6,9 +6,18 @@ Legible scans an Express/TypeScript store and publishes the routes you approve a
 
 Built for the **PayPal AI Hackathon 2026**. The full prototype runs locally and uses PayPal Sandbox. MIT licensed.
 
-[![Legible demo: an AI agent shops through MCP, PayPal Sandbox payments are verified, planted bugs and a prompt injection are caught](docs/img/demo.gif)](https://youtu.be/ibQWsZYpaZs)
+<p align="center">
+  <a href="https://youtu.be/ibQWsZYpaZs"><img src="https://img.shields.io/badge/%E2%96%B6%20Watch%20the%20demo-2%3A20-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="Watch the demo on YouTube" height="44"></a>
+  &nbsp;
+  <a href="https://legible-demo-site.netlify.app"><img src="https://img.shields.io/badge/Live%20dashboard-real%20runs-00C7B7?style=for-the-badge&logo=netlify&logoColor=white" alt="Open the live dashboard" height="44"></a>
+  &nbsp;
+  <a href="#run-it-locally"><img src="https://img.shields.io/badge/Run%20it%20locally-pnpm%20demo-0070E0?style=for-the-badge&logo=pnpm&logoColor=white" alt="Run it locally" height="44"></a>
+</p>
 
-**[▶ Watch the full demo (2:20)](https://youtu.be/ibQWsZYpaZs)** · **[Explore the hosted dashboard](https://legible-demo-site.netlify.app)**  
+<p align="center">
+  <a href="https://youtu.be/ibQWsZYpaZs"><img src="docs/img/demo.gif" alt="Legible demo: an AI agent shops through MCP, PayPal Sandbox payments are verified, planted bugs and a prompt injection are caught" width="100%"></a>
+</p>
+
 The hosted dashboard is a read-only snapshot of the two real PayPal Sandbox runs below (tool approvals are disabled there). To scan the store and run the agent yourself, follow the [local setup](#run-it-locally).
 
 ## What the crash test found
