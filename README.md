@@ -182,6 +182,3 @@ Verify runs before approval and again after PayPal, because the paid-early bug i
 - PayPal webhooks, so a capture does not depend on the buyer's browser returning.
 - A second demo site to widen the scanner benchmark beyond our 11-route labelled set.
 - More frameworks (Next.js, FastAPI, Rails). The scanner reads Express/TypeScript today.
-
-## Team
-Rules for every coding agent: `AGENTS.md`. Briefs: `docs/briefs/`. Progress log: `docs/progress.md`. Video script: `docs/demo-script.md`.
