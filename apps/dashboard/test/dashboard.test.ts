@@ -69,6 +69,7 @@ describe("manifest", () => {
   it("hiddenReason translates the scanner's note", () => {
     expect(hiddenReason("money route … cannot bind to Safe Pay", "x")).toMatch(/PayPal/);
     expect(hiddenReason(undefined, "web page only")).toBe("web page only");
+    expect(hiddenReason("order route that only the payment service calls (Contract 6): never an agent tool, not exposed", "agents can update orders")).toMatch(/^Internal: only the payment service/);
   });
 });
 

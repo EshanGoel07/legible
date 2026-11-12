@@ -4,7 +4,7 @@ import OpenAI from "openai";
 import { Manifest } from "@legible/contracts";
 import { discoverRoutes, toManifestPath, type DiscoveredRoute } from "../src/discover.js";
 import { classify, ruleRisk } from "../src/classify.js";
-import { buildManifest, findCartRoute } from "../src/build.js";
+import { buildManifest, findCartRoute, isCartRoute, isPaymentServiceRoute } from "../src/build.js";
 import { DESCRIBE_TOOL, type RouteDescription } from "../src/describe.js";
 import { Llm, type ChatClient } from "../src/llm.js";
 import { score } from "../src/eval.js";
@@ -81,6 +81,60 @@ describe("build manifest", () => {
   });
   it("finds the cart route by longest GET prefix", () => {
     expect(findCartRoute(routes[1], routes)?.path).toBe("/api/cart/:cartId");
+  });
+
+  // Regression (12 Nov, openai/gpt-oss-20b): the model said expose=true for POST /api/orders/:checkoutId/status, the
+  // rules made it money, and GET /api/orders/:checkoutId was accepted as its "cart total" route, so it was published
+  // as a money tool (update_order_status). The same model answers, replayed.
+  it("gpt-oss-20b case: the order routes are never exposed, and an orders route is never a Safe Pay total", () => {
+    const r = [
+      route("GET", "/api/cart/:cartId"),
+      route("POST", "/api/cart/:cartId/checkout"),
+      route("POST", "/api/orders"),
+      route("GET", "/api/orders/:checkoutId"),
+      route("POST", "/api/orders/:checkoutId/status"),
+      route("GET", "/api/products"),
+    ];
+    const d = [
+      desc({ name: "get_cart", inputs: [{ name: "cartId", in: "path", type: "string", required: true }] }),
+      desc({ name: "checkout", risk: "money", inputs: [{ name: "cartId", in: "path", type: "string", required: true }] }),
+      desc({ name: "create_order", risk: "write" }),
+      desc({ name: "get_order", inputs: [{ name: "checkoutId", in: "path", type: "string", required: true }] }),
+      desc({ name: "update_order_status", risk: "write", inputs: [{ name: "checkoutId", in: "path", type: "string", required: true }, { name: "status", in: "body", type: "string", required: true }] }),
+      desc({ name: "search_products" }),
+    ];
+    const b = buildManifest(r, d, { site, limits });
+    expect(b.manifest.tools.map((t) => t.name)).toEqual(["get_cart", "checkout", "search_products"]);
+    expect(b.manifest.tools.filter((t) => t.risk === "money").map((t) => [t.name, (t.binding as { cartPath: string }).cartPath])).toEqual([["checkout", "/api/cart/{cartId}"]]);
+    for (const p of ["/api/orders", "/api/orders/:checkoutId", "/api/orders/:checkoutId/status"]) {
+      const det = b.details.find((x) => x.path === p)!;
+      expect(det.final?.expose).toBe(false);
+      expect(det.note).toMatch(/only the payment service calls/);
+    }
+    // The binding rule on its own, even if an order route slipped past the rule above:
+    expect(findCartRoute(r[4], r)).toBeNull();
+    expect(findCartRoute(r[1], r)?.path).toBe("/api/cart/:cartId");
+  });
+
+  it("cart routes: cart segment + cart-id param, or a handler that returns StoreCart; never orders, never non-GET", () => {
+    expect(isCartRoute(route("GET", "/api/cart/:cartId"))).toBe(true);
+    expect(isCartRoute(route("GET", "/carts/:id/summary"))).toBe(false); // no cart-id param name
+    expect(isCartRoute({ ...route("GET", "/basket/:id"), handlerSource: "(req, res) => res.json(StoreCart.parse(x))" })).toBe(true);
+    expect(isCartRoute({ ...route("GET", "/basket/:id"), context: ["getBasket(id: string): StoreCart"] })).toBe(true);
+    expect(isCartRoute({ ...route("GET", "/api/orders/:cartId"), handlerSource: "StoreCart" })).toBe(false);
+    expect(isCartRoute(route("GET", "/api/orders/:checkoutId"))).toBe(false);
+    expect(isCartRoute(route("POST", "/api/cart/:cartId"))).toBe(false);
+    expect(isPaymentServiceRoute({ path: "/api/orders/:checkoutId/status" })).toBe(true);
+    expect(isPaymentServiceRoute({ path: "/api/cart/:cartId" })).toBe(false);
+  });
+
+  it("the real demo store: money binds to GET /api/cart/:cartId, never to an orders route", () => {
+    const { routes: real } = discoverRoutes(STORE);
+    const byPath = (m: string, p: string) => real.find((x) => x.method === m && x.path === p)!;
+    expect(isCartRoute(byPath("GET", "/api/cart/:cartId"))).toBe(true);
+    expect(isCartRoute(byPath("GET", "/api/orders/:checkoutId"))).toBe(false);
+    expect(findCartRoute(byPath("POST", "/api/orders/:checkoutId/status"), real)).toBeNull();
+    expect(findCartRoute(byPath("POST", "/api/cart/:cartId/checkout"), real)?.path).toBe("/api/cart/:cartId");
   });
 });
 

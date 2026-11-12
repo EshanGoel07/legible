@@ -1,5 +1,5 @@
 /** Assemble Contract 1 from the three stages. Output always passes Manifest.parse. */
-import { Manifest, Tool, type Risk } from "@legible/contracts";
+import { Manifest, ROUTES, Tool, type Risk } from "@legible/contracts";
 import { classify, type Classified } from "./classify.js";
 import { pathParams, toManifestPath, type DiscoveredRoute } from "./discover.js";
 import type { RouteDescription } from "./describe.js";
@@ -46,6 +46,14 @@ export function buildManifest(routes: DiscoveredRoute[], described: Array<RouteD
     const detail: RouteDetail = { ...base, llm: d, error: null, classified: c, final: { expose: d.expose, name: d.name, risk: c.risk, confidence: c.confidence } };
     details.push(detail);
     if (!d.expose) return;
+
+    // Safety rule: the order API exists for the payment service (Contract 6). Whatever the model says, agents never get it.
+    if (isPaymentServiceRoute(route)) {
+      detail.final!.expose = false;
+      detail.note = PAYMENT_SERVICE_NOTE;
+      warnings.push(`${route.method} ${route.path}: ${detail.note}`);
+      return;
+    }
 
     let binding: Tool["binding"];
     if (c.risk === "money") {
@@ -103,10 +111,35 @@ export function inputSchema(route: DiscoveredRoute, d: RouteDescription) {
   return { type: "object" as const, properties, ...(required.size ? { required: [...required] } : {}) };
 }
 
-/** The GET route the Publisher reads for the amount: longest GET path that is a prefix of the money route's path. */
+/** Contract 6: routes the payment service (Safe Pay) calls on the site to record and update orders. */
+const PAYMENT_SERVICE_ROUTES = new Set<string>([ROUTES.store.orders, ROUTES.store.order, ROUTES.store.orderStatus]);
+export const PAYMENT_SERVICE_NOTE = "order route that only the payment service calls (Contract 6): never an agent tool, not exposed";
+export const isPaymentServiceRoute = (r: Pick<DiscoveredRoute, "path">) => PAYMENT_SERVICE_ROUTES.has(r.path);
+
+const segments = (p: string) => p.split("/").filter(Boolean);
+
+/**
+ * A route that returns a cart, so its total is what the shopper agreed to pay. Never an orders route.
+ * Cart = the handler (or a declaration it uses) mentions StoreCart, or the path has a `cart(s)` segment directly
+ * followed by a cart-id param (e.g. /api/cart/:cartId).
+ */
+export function isCartRoute(r: Pick<DiscoveredRoute, "method" | "path" | "handlerSource" | "context">): boolean {
+  if (r.method !== "GET") return false;
+  const segs = segments(r.path);
+  if (segs.some((s) => /^orders?$/i.test(s))) return false;
+  const cartParam = segs.some((s, i) => /^carts?$/i.test(s) && /^:\w*cart\w*$/i.test(segs[i + 1] ?? ""));
+  const returnsCart = /\bStoreCart\b/.test(`${r.handlerSource}\n${r.context.join("\n")}`);
+  return cartParam || returnsCart;
+}
+
+/**
+ * The GET route the Publisher reads for the amount: the longest cart route (see isCartRoute) whose path is a prefix of
+ * the money route's path and whose params the money route also has. Safe Pay charges that route's total, so an orders
+ * route (or anything else that is not a cart) must never be picked.
+ */
 export function findCartRoute(money: DiscoveredRoute, routes: DiscoveredRoute[]): DiscoveredRoute | null {
   const candidates = routes.filter(
-    (r) => r.method === "GET" && r !== money && money.path.startsWith(r.path) && pathParams(r.path).every((p) => pathParams(money.path).includes(p)) && pathParams(r.path).length > 0,
+    (r) => r !== money && isCartRoute(r) && money.path.startsWith(r.path) && pathParams(r.path).length > 0 && pathParams(r.path).every((p) => pathParams(money.path).includes(p)),
   );
   return candidates.sort((a, b) => b.path.length - a.path.length)[0] ?? null;
 }

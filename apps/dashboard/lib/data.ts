@@ -119,6 +119,7 @@ export function loadManifestView(cfg: DashConfig): ManifestView {
 
 /** Plain-English reason a route was not exposed (the scanner's own note is engineer-speak). */
 export function hiddenReason(note: string | undefined, modelReason: string | undefined): string {
+  if (note && /only the payment service calls/i.test(note)) return "Internal: only the payment service (Safe Pay) calls it to record orders, so no agent may.";
   if (note && /safe ?pay/i.test(note)) return "Blocked by Legible's safety rule: it touches money but can't be routed through PayPal, so no agent may call it.";
   return modelReason ?? note ?? "Not exposed";
 }

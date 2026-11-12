@@ -7,8 +7,8 @@ The terminal is on screen for under 20 s in total (two short cuts); everything e
 Record each segment separately and cut out the waiting.
 
 Numbers below are placeholders in **[brackets]** where they depend on the run you record: read them off your own
-screen. On 12 Nov we measured 100/100 with bugs off, and 20/100 with bugs on (that bugs-on run used the fallback model
-`gpt-oss-20b`; see the README score table).
+screen. On 12 Nov we measured 100/100 with bugs off and 20/100 with bugs on, both with `openai/gpt-oss-20b`
+(see the README score table).
 
 ## Before recording
 - `.env` filled; `nvm use` (Node 22); Chromium installed (`pnpm --filter @legible/safepay exec playwright install chromium`).
@@ -89,6 +89,5 @@ cleanly, one payment blocked by the limit. A hundred out of a hundred."
 - Dashboard slow on first load → it compiles each page once in dev mode; open `/tools` and `/report` once before recording.
 - LLM 429s → a per-minute limit clears in a minute (the backoff retries on its own). A **daily** cap does not: each step
   then takes minutes. Switch model for the session without editing `.env`, e.g. `LLM_MODEL=openai/gpt-oss-20b pnpm demo`
-  (it has its own daily budget and ran all five scenarios on 12 Nov; its scan exposed one extra tool flagged Review,
-  so use `--manual` and leave that one off).
+  (it has its own daily budget and ran all five scenarios on 12 Nov, scanning exactly 7 tools).
 - Sandbox login page changed → record the human flow by hand; Crash Test screenshots failures to `apps/safepay/test-results/`.
